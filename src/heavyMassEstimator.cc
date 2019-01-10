@@ -8,7 +8,7 @@
 
 //Simulation or not
 #include <iostream>
-#include "heavyMassEstimator.h"
+#include "../interface/heavyMassEstimator.h"
 #include <time.h>       /* time */
 
 //constructor
