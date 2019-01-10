@@ -64,3 +64,11 @@ if runHME:
 
 print "Cputime ",stop_watch.CpuTime()," realtime ",stop_watch.RealTime()
 stop_watch.Stop()
+
+
+print "*****************************************************************************************************************************************"
+print "if you want to use this code, please cite:                                                                                               "
+print "T. Huang, J.M. No, L. Pernie,  M. Ramsey-Musolf, A. Safonov, M. Spannowsky, and P. Winslow"
+print "\" Resonant di-Higgs boson production in the bbWW channel: Probing the electroweak phase transition at the LHC\"                         "
+print "Phys. Rev. D 96, 035007, Published 11 August 2017                                                                                  "     
+print "*****************************************************************************************************************************************"
