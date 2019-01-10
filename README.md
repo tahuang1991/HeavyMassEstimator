@@ -74,7 +74,7 @@ HeavyMassEstimator used two leptons and two jets, MET as inputs to get HME resul
 PUsample_ is by defualt is true and MET is taken from met collect in event (for useMET in C++ version)
 bjetrescaleAlgo and metcorrection, by default, are taken the values that give the best performance in past
 
-The example of calling HeavyMassEstimator in python is scripts/runHME_HHbbWW.py
+The example of calling HeavyMassEstimator in python is scripts/testHME.py
 
 # References
 
