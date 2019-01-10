@@ -1,6 +1,8 @@
 # Heavy mass estimator 
 designed for estimating the mass of heavy resonance in X->HH->bbWW->bblvlv with two neutrinos in final states.  
 
+# Check out code
+git clone https://github.com/tahuang1991/HeavyMassEstimator
 
 # C++ version
 ROOT must be installed before as heavy mass estimator package used ROOT package 
@@ -17,25 +19,38 @@ the constructor of HME is
         int iterations, std::string RefPDFfile, bool useMET, int bjetrescaleAlgo, int metcorrection, int verbose_=0
 	);
 ```
-in this constructor:  lep1_lorentz, lep2_lorentz are the lorentz vector in ROOT (https://root.cern.ch/doc/v608/LorentzVectorPage.html) for two leptons
-b1jet_lorentz, b2jet_lorentz are the lorentz vector for two jets,
+in this constructor:  
+     lep1_lorentz, lep2_lorentz are the [lorentz vector] (https://root.cern.ch/doc/v608/LorentzVectorPage.html) in ROOT for two leptons
+     b1jet_lorentz, b2jet_lorentz are the lorentz vector for two jets,
 totjets_lorentz is the lorentz vector sum of all jets with pT > 20 and abs(eta)<2.5
-nu1_lorentz, nu2_lorentz, b_genp_lorentz, bbar_genp_lorentz, h2tohh_lorentz, simulation contains simulation information and are used for debugging.
-and the other constructor can ignore those inputs from simulation information. 
-
-PUsample_ is a boolean whether the input sample is PU or not. MET used in HME is smeared according to MET resolution and MET resolution depends on PU
-ievent is event id and used for debug purpose 
-weightfromonshellnupt_func, weightfromonshellnupt_hist, weightfromonoffshellWmass_hist are booleans to define how to assign the weights to iteration results
-and RefPDFfile is a root file containing the histograms used for weighting and jet correction. The histograms are derived from delphes sample and used in Pheno study(https://journals.aps.org/prd/abstract/10.1103/PhysRevD.96.035007)
-iterations is the number of eta-phi pair random generation.
-useMET is whether to use MET from met collection or calculate MET from leptons and jets with momentum and energy conservation law
-bjetrescaleAlgo and metcorrection are used to define how to correct bjets and met
+     nu1_lorentz, nu2_lorentz, b_genp_lorentz, bbar_genp_lorentz, h2tohh_lorentz, simulation contains simulation information and are used for debugging. The other constructor can ignore those inputs from simulation information. 
+   PUsample_ is a boolean whether the input sample is PU or not. MET used in HME is smeared according to MET resolution and MET resolution depends on PU
+ ievent is event id and used for debug purpose 
+ weightfromonshellnupt_func, weightfromonshellnupt_hist, weightfromonoffshellWmass_hist are booleans to define how to assign the weights to iteration results
+ RefPDFfile is a root file containing the histograms used for weighting and jet correction. The histograms are derived from delphes sample and used in Pheno study(https://journals.aps.org/prd/abstract/10.1103/PhysRevD.96.035007)
+ iterations is the number of eta-phi pair random generation.
+ useMET is whether to use MET from met collection or calculate MET from leptons and jets with momentum and energy conservation law
+ bjetrescaleAlgo and metcorrection are used to define how to correct bjets and met
 
 
-# how to run C++ version
+# how to compile and run C++ version
+prerequisites to compile the package:
+  -ROOT
 
+to compile the code:
+```
+cd HeavyMassEstimator
+make
+```
+
+to run heavy mass estimator with testHME:
+```
+./bin/testHME.exe
+```
+
+testHME.cc:
 the example code to use heavyMassEstimator is shown in bin/testHME.cc and 10 events are hard coded in testHME.cc
-use make to compile the package here and then run ./testHME.exe
+
 
 
 # Python version
