@@ -3,3 +3,4 @@ exec/
 dep/
 obj/
 lib/
+*.pyc
