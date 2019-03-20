@@ -294,7 +294,7 @@ class HeavyMassEstimator(object):
                 return False
             rescale = 125.0/hbb_p4.M()
             self.b1rescalefactor[0] = rescale
-            self.b1rescalefactor[1] = rescale
+            self.b2rescalefactor[0] = rescale
             return True
 	if not (self.recobjetrescalec1pdf_flag) and self.bjetscorrectionType  == 2:
 	    print "failed to have recobjetrescalec1pdf_flag , no Correction"

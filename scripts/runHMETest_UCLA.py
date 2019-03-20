@@ -26,7 +26,7 @@ tree_name="treeMaker/Events"
 TCha = ROOT.TChain(tree_name)
 inputfilename = "singal.root"## ntuple including the kinematics 
 #inputfilename = "/fdata/hepx/store/user/taohuang/HHNtuple_20180412/GluGluToRadionToHHTo2B2VTo2L2Nu_M-400_narrow_13TeV-madgraph-v2/2A37ACDD-B119-E811-B6B6-A4BF01026229_Friend.root"
-inputfilename = "skim_radion_hh_bbinc_m1600_0.root"
+inputfilename = "/home/taohuang/HeavyMassEstimator/data/skim_radion_hh_bbinc_m1600_0.root"
 TCha.Add(inputfilename)
 nStart = 0
 nEnd = -1
@@ -35,7 +35,7 @@ if nEnd < 0:
     print "nEnd ",nEnd
 
 
-f = ROOT.TFile("HMEntuples_Tao.root", 'recreate'); f.cd()
+f = ROOT.TFile("HMEntuples_Tao_bjetcorrecttype1.root", 'recreate'); f.cd()
 TCha2 = TCha.CloneTree(0)
 
 ### add HME information to TCha2
@@ -278,7 +278,7 @@ for nEv in range(nStart, nEnd):
       hme = HeavyMassEstimator()
       hme.setKinematic(lep1_p4, lep2_p4, jet1_p4, jet2_p4, met_vec2, 0)
       hme.setIterations(args.iterations)
-      hme.setBjetCorrectionType(0)
+      hme.setBjetCorrectionType(1)
       #hme.setDebug(True)
       hme.runHME()
       #hme.hme_offshellWmass.SetName("hme_offshellWmass_TCha.d_genlTCha.e"%nEv)
