@@ -136,20 +136,22 @@ for nEv in range(nStart, nEnd):
   subleadinglepPt = {"Muon": 10, "Electron": 10}
   allmu_index = []; leadingmus_index = []
   allel_index = []; leadingels_index = []
-  leadingleppt = 0.0; subleadingleppt = 0.0;
+  leadingleppt = 26.0; subleadingleppt = 10.0;
   leadingmu_index = -1; subleadingmu_index = -1; 
   leadingel_index = -1; subleadingel_index = -1;
   leptonpair_type = -1
   lep1_pt = 0.0; lep1_eta = 0.0; lep1_phi = 0.0;
   lep2_pt = 0.0; lep2_eta = 0.0; lep2_phi = 0.0;
   for i, mupt in enumerate(TCha.muon_pt):
-      if mupt > 10 and abs(TCha.muon_eta[i])<2.4 and abs(TCha.muon_d0[i]) < 0.1 and abs(TCha.muon_sip3D[i]) < 4 and TCha.muon_miniIso[i] < 0.2:#add id cut
+      if mupt > 10.0 and abs(TCha.muon_eta[i])<2.4 and abs(TCha.muon_d0[i]) < 0.1 and abs(TCha.muon_dz[i]) < 0.1 and abs(TCha.muon_sip3D[i]) < 4 and TCha.muon_miniIso[i] < 0.2:#add id cut
+          #print "Muon index ",i, " mupt ",mupt," TCha.muon_pt ",TCha.muon_pt[i]
           allmu_index.append(i)
-          if mupt > 26: leadingmus_index.append(i)
+          if mupt > 26.0: leadingmus_index.append(i)
   for i, elpt in enumerate(TCha.electron_pt):
-      if elpt > 10 and abs(TCha.electron_scEta[i])<2.5 and abs(TCha.electron_d0[i]) < 0.1 and abs(TCha.electron_sip3D[i]) < 4 and TCha.electron_miniIso[i] < 0.2:#add id cut
+      if elpt > 10.0 and abs(TCha.electron_scEta[i])<2.5 and abs(TCha.electron_d0[i]) < 0.1 and abs(TCha.electron_dz[i]) < 0.1 and abs(TCha.electron_sip3D[i]) < 4 and TCha.electron_miniIso[i] < 0.2:#add id cut
+          #print "El index ",i," elpt ",elpt," TCha.muon_pt ",TCha.electron_pt[i]
           allel_index.append(i)
-          if elpt > 30: leadingels_index.append(i) 
+          if elpt > 30.0: leadingels_index.append(i) 
 
   #print "allmu index ",allmu_index, " allel_index ",allel_index
   if len(leadingmus_index) >= 1 and len(allmu_index) >= 2:
@@ -161,7 +163,7 @@ for nEv in range(nStart, nEnd):
       for j in allmu_index:
           if j != leadingmu_index and TCha.muon_pt[j] > subleadingleppt:
               subleadingleppt = TCha.muon_pt[j]
-              leadingmu_index = j
+              subleadingmu_index = j
       lep1_pt = TCha.muon_pt[leadingmu_index]; lep1_eta = TCha.muon_eta[leadingmu_index]; lep1_phi = TCha.muon_phi[leadingmu_index];
       lep2_pt = TCha.muon_pt[subleadingmu_index]; lep2_eta = TCha.muon_eta[subleadingmu_index]; lep2_phi = TCha.muon_phi[subleadingmu_index];
       lep1index = leadingmu_index; lep2index = subleadingmu_index
@@ -174,10 +176,9 @@ for nEv in range(nStart, nEnd):
       for j in allel_index:
           if TCha.electron_pt[j] > subleadingleppt:
               subleadingleppt = TCha.electron_pt[j]
-              leadingel_index = j
+              subleadingel_index = j
       lep1_pt = TCha.muon_pt[leadingmu_index]; lep1_eta = TCha.muon_eta[leadingmu_index]; lep1_phi = TCha.muon_phi[leadingmu_index];
       lep2_pt = TCha.electron_pt[subleadingel_index]; lep2_eta = TCha.electron_eta[subleadingel_index]; lep2_phi = TCha.electron_phi[subleadingel_index];
-
       lep1index = leadingmu_index; lep2index = subleadingel_index
   elif len(leadingels_index) >= 1 and len(allmu_index) >= 1:
       leptonpair_type = 3
@@ -188,7 +189,7 @@ for nEv in range(nStart, nEnd):
       for j in allmu_index:
           if TCha.muon_pt[j] > subleadingleppt:
               subleadingleppt = TCha.muon_pt[j]
-              leadingmu_index = j
+              subleadingmu_index = j
       lep1_pt = TCha.electron_pt[leadingel_index]; lep1_eta = TCha.electron_eta[leadingel_index]; lep1_phi = TCha.electron_phi[leadingel_index];
       lep2_pt = TCha.muon_pt[subleadingmu_index]; lep2_eta = TCha.muon_eta[subleadingmu_index]; lep2_phi = TCha.muon_phi[subleadingmu_index];
       lep1index = leadingel_index; lep2index = subleadingmu_index
@@ -202,7 +203,7 @@ for nEv in range(nStart, nEnd):
       for j in allel_index:
           if j != leadingel_index and TCha.electron_pt[j] > subleadingleppt:
               subleadingleppt = TCha.electron_pt[j]
-              leadingel_index = j
+              subleadingel_index = j
       lep1_pt = TCha.electron_pt[leadingel_index]; lep1_eta = TCha.electron_eta[leadingel_index]; lep1_phi = TCha.electron_phi[leadingel_index];
       lep2_pt = TCha.electron_pt[subleadingel_index]; lep2_eta = TCha.electron_eta[subleadingel_index]; lep2_phi = TCha.electron_phi[subleadingel_index];
       lep1index = leadingel_index; lep2index = subleadingel_index
@@ -210,12 +211,18 @@ for nEv in range(nStart, nEnd):
       print "no dilepton pair is found"
       continue
   
+  print "leptonpair type ",leptonpair_type," lep1 index ",lep1index," pt ",lep1_pt," eta ",lep1_eta," lep2 index ",lep2index," pt ",lep2_pt," eta ",lep2_eta
   leptonpairtype[0] = leptonpair_type
   ll_dR = sqrt((lep1_eta-lep2_eta)*(lep1_eta-lep2_eta) + (lep1_phi-lep2_phi)*(lep1_phi-lep2_phi))
   lep1_p4 	  = ROOT.TLorentzVector(); lep1_p4.SetPtEtaPhiM(lep1_pt, lep1_eta, lep1_phi, 0)
   lep2_p4 	  = ROOT.TLorentzVector(); lep2_p4.SetPtEtaPhiM(lep2_pt, lep2_eta, lep2_phi, 0) 
   ll_p4 = lep1_p4 + lep2_p4
   ll_M = ll_p4.M()
+  cleancut        = (ll_M<(91-15) and ll_M > 12 and ll_dR < 1.6)
+  if not cleancut:
+      print "failed in dilepton clean cut, ll_M ",ll_M," ll_dR ",ll_dR
+      TCha2.Fill()
+      continue
 
   fatjet_index = -1; fatjet_pt = 200.0
   def deltaPhi(phi1, phi2):
@@ -230,8 +237,8 @@ for nEv in range(nStart, nEnd):
           continue
       bblep1_dR = sqrt((TCha.ak8PuppiJet_phi[i]-lep1_phi)*(TCha.ak8PuppiJet_phi[i]-lep1_phi)+(TCha.ak8PuppiJet_eta[i]-lep1_eta)*(TCha.ak8PuppiJet_eta[i]-lep1_eta))
       bblep2_dR = sqrt((TCha.ak8PuppiJet_phi[i]-lep2_phi)*(TCha.ak8PuppiJet_phi[i]-lep2_phi)+(TCha.ak8PuppiJet_eta[i]-lep2_eta)*(TCha.ak8PuppiJet_eta[i]-lep2_eta))
-      subjetscut = (TCha.ak8PuppiJet_sj1_pt[i] > 20 and abs(TCha.ak8PuppiJet_sj1_eta[i])<2.4 and TCha.ak8PuppiJet_sj1_csv[i] > 0.4941 and TCha.ak8PuppiJet_sj2_pt[i] > 20 and abs(TCha.ak8PuppiJet_sj2_eta[i])<2.4 and TCha.ak8PuppiJet_sj2_csv[i] > 0.4941)
-      print "ak8jet pt ",TCha.ak8PuppiJet_pt[i]," mass ",TCha.ak8PuppiJet_mass[i]," bblep1_dR ",bblep1_dR," bblep2_dR ",bblep2_dR, " subjetcut ",subjetscut
+      subjetscut = (TCha.ak8PuppiJet_sj1_pt[i] > 20 and abs(TCha.ak8PuppiJet_sj1_eta[i])<2.4 and TCha.ak8PuppiJet_sj2_pt[i] > 20 and abs(TCha.ak8PuppiJet_sj2_eta[i])<2.4 and (TCha.ak8PuppiJet_sj1_csv[i] > 0.4941 or TCha.ak8PuppiJet_sj2_csv[i] > 0.4941))
+      #print "ak8jet pt ",TCha.ak8PuppiJet_pt[i]," mass ",TCha.ak8PuppiJet_mass[i]," bblep1_dR ",bblep1_dR," bblep2_dR ",bblep2_dR, " subjetcut ",subjetscut," subjet1 b-tagging ",TCha.ak8PuppiJet_sj1_csv[i]," subjet2 b-tagging ",TCha.ak8PuppiJet_sj2_csv[i]
       if TCha.ak8PuppiJet_pt[i] > 200.0 and abs(deltaPhi(TCha.ak8PuppiJet_phi[i], ll_p4.Phi())) > 2.0 and bblep1_dR > 0.8 and bblep2_dR > 0.8 and subjetscut:   
           fatjet_index = i; fatjet_pt = TCha.ak8PuppiJet_pt[i] 
           
@@ -254,11 +261,7 @@ for nEv in range(nStart, nEnd):
 
   jet1_p4 	  = ROOT.TLorentzVector(); jet1_p4.SetPtEtaPhiM(jet1_pt, jet1_eta, jet1_phi, jet1_mass)
   jet2_p4 	  = ROOT.TLorentzVector(); jet2_p4.SetPtEtaPhiM(jet2_pt, jet2_eta, jet2_phi, jet2_mass)
-  met_vec2    = ROOT.TVector2();       met_vec2.SetMagPhi(TCha.event_met_pt, TCha.event_met_phi)
-  cleancut          = (ll_M<(91-15) and ll_M > 12 and ll_dR < 1.6)
-  if not cleancut:
-      TCha2.Fill()
-      continue
+  met_vec2        = ROOT.TVector2();       met_vec2.SetMagPhi(TCha.event_met_pt, TCha.event_met_phi)
 
 
   
