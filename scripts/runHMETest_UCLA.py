@@ -29,7 +29,10 @@ inputfilename = "singal.root"## ntuple including the kinematics
 inputfilename = "skim_radion_hh_bbinc_m1600_0.root"
 TCha.Add(inputfilename)
 nStart = 0
-nEnd = 100
+nEnd = -1
+if nEnd < 0:
+    nEnd = TCha.GetEntries()
+    print "nEnd ",nEnd
 
 
 f = ROOT.TFile("HMEntuples_Tao.root", 'recreate'); f.cd()
