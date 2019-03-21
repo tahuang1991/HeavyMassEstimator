@@ -15,7 +15,7 @@ else
   LDFLAGS  += -s
 endif
 
-BASEDIR = .
+BASEDIR = $(PWD)
 
 SOURCE_PATH = $(BASEDIR)/src
 BIN_PATH    = $(BASEDIR)/bin
@@ -41,6 +41,7 @@ TRGT_OBJS     = $(TRGT_SRCS:%.$(SRC_EXT)=$(OBJ_PATH)/%.$(OBJ_EXT))
 TRGT          = $(TRGT_SRCS:%.$(SRC_EXT)=$(EXEC_PATH)/%)
 TRGT_LIB_BASE = $(subst /,_,$(BASEDIR))
 TRGT_LIB_PATH = $(LIB_PATH)/lib$(TRGT_LIB_BASE).$(LIB_EXT)
+#TRGT_LIB_PATH = $(LIB_PATH)/lib.$(LIB_EXT)
 
 all: $(TRGT)
 
