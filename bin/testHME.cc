@@ -128,7 +128,8 @@ int main(int argc, char *argv[])
     bool weightfromonshellnupt_func_ = false;
     bool weightfromonshellnupt_hist_ = true;
     bool weightfromonoffshellWmass_hist_ = true;
-    string RefPDFfile_ = "REFPDFPU40.root";//the root file contains histogram for weighting 
+    string RefPDFfile_ = "../data/REFPDFPU40.root";//the root file contains histogram for weighting 
+    
     int iterations_ = 10000;
     bool useMET_ = true;//use MET or totjets_p4 to estimate kinematic sum of two nuetrino
     int bjetrescaleAlgo_ = 2;//jet correction
