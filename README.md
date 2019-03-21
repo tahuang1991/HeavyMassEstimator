@@ -56,7 +56,8 @@ make
 
 to run heavy mass estimator with testHME:
 ```
-./bin/testHME.exe
+cd bin
+./testHME
 ```
 
 testHME.cc:
