@@ -28,14 +28,14 @@ inputfilename = "singal.root"## ntuple including the kinematics
 #inputfilename = "/fdata/hepx/store/user/taohuang/HHNtuple_20180412/GluGluToRadionToHHTo2B2VTo2L2Nu_M-400_narrow_13TeV-madgraph-v2/2A37ACDD-B119-E811-B6B6-A4BF01026229_Friend.root"
 inputfilename = "/home/taohuang/HeavyMassEstimator/data/skim_radion_hh_bbinc_m1600_0.root"
 TCha.Add(inputfilename)
-nStart = 0
-nEnd = -1
+nStart = 103
+nEnd = 104
 if nEnd < 0:
     nEnd = TCha.GetEntries()
     print "nEnd ",nEnd
 
 
-f = ROOT.TFile("HMEntuples_Tao_bjetcorrecttype1.root", 'recreate'); f.cd()
+f = ROOT.TFile("HMEntuples_Tao_bjetcorrecttype1_test.root", 'recreate'); f.cd()
 TCha2 = TCha.CloneTree(0)
 
 ### add HME information to TCha2
@@ -247,10 +247,14 @@ for nEv in range(nStart, nEnd):
           
   if fatjet_index < 0:
       print "fatjet is not found!!! ",list(TCha.ak8PuppiJet_pt)," subjet1 ",list(TCha.ak8PuppiJet_sj1_pt)," subjet2 ",list(TCha.ak8PuppiJet_sj2_pt)
+      TCha2.Fill()
+      continue
+  if TCha.event_met_pt <= 40:
+      print "MET is ",TCha.event_met_pt," less than 40 "
       continue
 
   ak8jetindex[0] = fatjet_index 
-  print "nEv ",nEv," ak8jets ",list(TCha.ak8PuppiJet_pt), " metpt ",TCha.event_met_pt," fatjet_index ",fatjet_index
+  print "nEv ",nEv," ak8jets mass ",TCha.ak8PuppiJet_mass[fatjet_index]," 125.0/mass ", 125.0/TCha.ak8PuppiJet_mass[fatjet_index], " metpt ",TCha.event_met_pt
   jet1_pt = TCha.ak8PuppiJet_pt[fatjet_index]; jet1_eta = TCha.ak8PuppiJet_eta[fatjet_index]; jet1_phi = TCha.ak8PuppiJet_phi[fatjet_index]; jet1_mass = TCha.ak8PuppiJet_mass[fatjet_index]
   jet2_pt = 0.0; jet2_eta = 0.0; jet2_phi = 0.0; jet2_mass = 0.0;
   vetoEvent  = False
@@ -260,6 +264,7 @@ for nEv in range(nStart, nEnd):
           vetoEvent = True
   if vetoEvent:
       print "veto this event because extra ak4jet with medium btag "
+      TCha2.Fill()
       continue
 
   jet1_p4 	  = ROOT.TLorentzVector(); jet1_p4.SetPtEtaPhiM(jet1_pt, jet1_eta, jet1_phi, jet1_mass)
@@ -278,8 +283,8 @@ for nEv in range(nStart, nEnd):
       hme = HeavyMassEstimator()
       hme.setKinematic(lep1_p4, lep2_p4, jet1_p4, jet2_p4, met_vec2, 0)
       hme.setIterations(args.iterations)
-      hme.setBjetCorrectionType(1)
-      #hme.setDebug(True)
+      hme.setBjetCorrectionType(0)
+      hme.setDebug(False)
       hme.runHME()
       #hme.hme_offshellWmass.SetName("hme_offshellWmass_TCha.d_genlTCha.e"%nEv)
       if hme.hme_h2Mass.GetEntries() <= 0:
@@ -312,7 +317,7 @@ for nEv in range(nStart, nEnd):
           #hme_stddev_weight2_reco[0] = hme.hme_h2MassWeight2.GetStdDev(1)
           hme_entries_weight2_reco[0] = float(hme.hme_h2MassWeight2.GetEntries())/args.iterations
 	  hme_entry_peak_weight2_reco[0] = hme.hme_h2MassWeight2.Integral(hme.hme_h2MassWeight2.GetMaximumBin()-5, hme.hme_h2MassWeight2.GetMaximumBin()+5)
-	  print "hme_h2mass_reco[0] ",hme_h2mass_reco[0]," hme_h2mass_weight2_reco[0] ",hme_h2mass_weight2_reco[0]
+	  print "hme_h2mass_reco[0] ",hme_h2mass_reco[0]," hme_h2mass_weight2_reco[0] ",hme_h2mass_weight2_reco[0]," entries ", hme_entries_reco[0]
 	  #offshell Wmass
 	  h_offshellWmass_recoh2mass = hme.hme_h2MassAndoffshellWmass.ProjectionY("h_offshellWmass_recoh2mass",hme.hme_h2Mass.GetMaximumBin()-5, hme.hme_h2Mass.GetMaximumBin()+5)
 	  h_offshellWmass_recoh2mass_weight2 = hme.hme_h2MassAndoffshellWmass_weight2.ProjectionY("h_offshellWmass_recoh2mass_weight2",hme.hme_h2MassWeight2.GetMaximumBin()-5, hme.hme_h2MassWeight2.GetMaximumBin()+5)
