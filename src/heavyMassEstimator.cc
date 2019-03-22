@@ -251,11 +251,13 @@ heavyMassEstimator::runheavyMassEstimator(){//should not include any gen level i
     //wmass_gen = onshellWMassRandomWalk(wmass_gen, step, random01);
     wmass_gen = onshellWMassRandomWalk(wmass_gen, step, random01, wmasshist);
     if (bjetrescale_ ==1){
+	//type1 bjet correction
 	b1rescalefactor = 125/hme_bjets_lorentz->M();
 	b2rescalefactor = 125/hme_bjets_lorentz->M();
 	rescalec1 = b1rescalefactor; rescalec2 = b2rescalefactor;
     }
     if (bjetrescale_ ==2){
+	//type2 bjet correction
 	rescalec1 = bjetrescalec1_hist->GetRandom();
 	//std::cout <<" rescale c1 " << rescalec1 << std::endl;
 	bool hascorrection =  bjetsCorrection();
@@ -277,25 +279,28 @@ heavyMassEstimator::runheavyMassEstimator(){//should not include any gen level i
 		
 	}
 
+    //metcorrection_ == 4 or 5 and metcorrection_ == bjetrescale_+3, do bjet correction and then propagate correction to met
     if ((metcorrection_-3)>0 and  ((metcorrection_ -3)== bjetrescale_ or metcorrection_==bjetrescale_)) metCorrection();
     else if ((metcorrection_-3) ==1 or metcorrection_==1){
+	//no bjet correction but does correct MET according to type1 bjet correction
 	b1rescalefactor = 125/hme_bjets_lorentz->M();
 	b2rescalefactor = 125/hme_bjets_lorentz->M();
 	metCorrection(); 
     }
     else if ((metcorrection_-3) ==2 or metcorrection_==2){
+	//no bjet correction but does correct MET according to type2 bjet correction
 	rescalec1 = bjetrescalec1_hist->GetRandom();
 	bool hascorrection = bjetsCorrection();//calculate b1rescalefactor b2rescalefactor
 	if (not hascorrection) continue;
 	metCorrection(); 
     }
-    /*else if ((metcorrection_-3) ==3){
-	rescalec1 = bjetrescalec1_hist->GetRandom();
-	rescalec2 = bjetrescalec2_hist->GetRandom();
-        b1rescalefactor = rescalec1; b2rescalefactor=rescalec2;
+    else if (metcorrection_ > 5){
+	//no bjet correction. only smearing MET according to MET resolution
+        b1rescalefactor = 1.0;
+        b2rescalefactor = 1.0;
 	//bjetsCorrection();
 	metCorrection(); 
-    }*/
+    }
     
 
     //std::cout <<" Met input px "<< hmemet_vec2->Px() << " py "<< hmemet_vec2->Py() <<" pt "<< hmemet_vec2->Mod() <<std::endl;

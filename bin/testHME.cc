@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
     evlist[6].totjets_p4.SetPxPyPzE(-86.736130,108.754678,-127.794368,359.246207);
     evlist[6].met_p4.SetXYZM( -73.6003, 5.65941, 0.0,0.0);
 
- 
+    /* 
     evlist[7].lep1_p4.SetPxPyPzE(-22.381014,50.897514,149.366302,159.379333);
     evlist[7].lep2_p4.SetPxPyPzE(-26.758770,27.116207,24.360731,45.219208);
     evlist[7].b1jet_p4.SetPxPyPzE(30.404705,-97.673676,206.070602,230.575378);
@@ -112,6 +112,28 @@ int main(int argc, char *argv[])
     evlist[9].totjets_p4.SetPxPyPzE(-31.302394,11.471296,459.979051,704.240572);
     //evlist[9].met_p4.SetPxPyPzE();
     evlist[9].met_p4.SetXYZM(12.5409, 1.68792,0.0,0.0);
+    */
+
+    //use boosted signal in evlist[7-9], mass = 1.6TeV
+    //b1jet = ak8 fat jet, b2jet = empty as HME is using Hbb momentum
+    //bjetrescaleAlgo_ = 0 and metcorrection_= 0
+     evlist[7].lep1_p4.SetPxPyPzE(-92.187746,54.858173,321.941003,339.343497);
+     evlist[7].lep2_p4.SetPxPyPzE(-13.944575,12.626226,101.495754,103.224322);
+     evlist[7].b1jet_p4.SetPxPyPzE(272.369183,-122.649673,-353.965748,465.0314);
+     evlist[7].b2jet_p4.SetPxPyPzE(0.0, 0.0, 0.0, 0.0);
+     evlist[7].met_p4.SetXYZM(-194.524071,9.588025, 0.0, 0.0);
+
+     evlist[8].lep1_p4.SetPxPyPzE(-114.329132,28.047933,-22.439267,119.838882);
+     evlist[8].lep2_p4.SetPxPyPzE(-239.283587,77.586590,-50.579326,256.582506);
+     evlist[8].b1jet_p4.SetPxPyPzE(604.487364,-86.972084,776.563375,995.429210);
+     evlist[8].b2jet_p4.SetPxPyPzE(0.0, 0.0, 0.0, 0.0);
+     evlist[8].met_p4.SetXYZM(-369.704339,152.487536, 0.0, 0.0);
+
+     evlist[9].lep1_p4.SetPxPyPzE(177.062684,410.546658,-32.055923,448.249188);
+     evlist[9].lep2_p4.SetPxPyPzE(35.757151,47.311371,-11.905378,60.487004);
+     evlist[9].b1jet_p4.SetPxPyPzE(-282.214774,-763.966082,-36.292881,825.096440);
+     evlist[9].b2jet_p4.SetPxPyPzE(0.0, 0.0, 0.0, 0.0);
+     evlist[9].met_p4.SetXYZM(118.043145,221.470590,0.0,0.0);
 
  
     //evlist[0].lep1_p4.SetPxPyPzE();
@@ -136,9 +158,18 @@ int main(int argc, char *argv[])
     int metcorrection_ = 5;//met correction
 
     float h2tohh_mass = 400.0;//signal benmark M=400, narrow width. in other word, HME output of all above events should be close to 400.0
+    
  
     for (int ievent=0; ievent <nevent; ievent++){
 	evlist[ievent].print();
+	//boosted events with mass =1600 GeV
+	if (ievent >= 7 and ievent <=9 ){
+	    bjetrescaleAlgo_ = 0;
+	    metcorrection_ = 6;
+	    h2tohh_mass = 1600;
+	}
+
+
 	heavyMassEstimator *thishme = new heavyMassEstimator(&evlist[ievent].lep1_p4, &evlist[ievent].lep2_p4, &evlist[ievent].b1jet_p4, &evlist[ievent].b2jet_p4, &evlist[ievent].totjets_p4, &evlist[ievent].met_p4, 
 	    PUSample_, ievent, weightfromonshellnupt_func_, weightfromonshellnupt_hist_, weightfromonoffshellWmass_hist_,
 	    iterations_, RefPDFfile_, useMET_, bjetrescaleAlgo_, metcorrection_);

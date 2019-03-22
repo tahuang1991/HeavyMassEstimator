@@ -91,10 +91,8 @@ class HeavyMassEstimator(object):
 		
 	self.debug = False
         self.bjetscorrectionType = 2
-	##resolved case
-        hme_min = 200.0; hme_max = 1200.0; hme_nbin = 1000
-	##boosted case
-        #hme_min = 800.0; hme_max = 2800.0; hme_nbin = 1000
+        self.METcorrectionType = 5
+        hme_min = 200.0; hme_max = 4000; hme_nbin = 3800
         offWmass_min = 0.0; offWmass_max = 100; offWmass_nbin = 100
         self.hme_h2Mass = ROOT.TH1F("hme_h2Mass","h2 mass from HME",hme_nbin, hme_min, hme_max)
         self.hme_h2Mass_correctmunupair = ROOT.TH1F("hme_h2Mass_correctmunupair","h2 mass from HME",hme_nbin, hme_min, hme_max)
@@ -195,6 +193,9 @@ class HeavyMassEstimator(object):
 
     def setBjetCorrectionType(self, x):
         self.bjetscorrectionType = x
+
+    def setMETCorrectionType(self, x):
+        self.METcorrectionType = x
 
     def setIterations(self, n):
 	self.iterations = int(n)
@@ -337,6 +338,7 @@ class HeavyMassEstimator(object):
 	    return ROOT.TVector2(0.0, 0.0)	
 	metpx_tmp = - (self.b1rescalefactor[0] - 1.0)*self.b1jet_p4.Px() - (self.b2rescalefactor[0] - 1.0)*self.b2jet_p4.Px()
 	metpy_tmp = - (self.b1rescalefactor[0] - 1.0)*self.b1jet_p4.Py() - (self.b2rescalefactor[0] - 1.0)*self.b2jet_p4.Py()
+	#print "met correction: self.b1rescalefactor ",self.b1rescalefactor[0]," self.b2rescalefactor ",self.b2rescalefactor[0]," metpx_tmp ",metpx_tmp," metpy_tmp ",metpy_tmp
 	return ROOT.TVector2(metpx_tmp, metpy_tmp)
     
     def assignMuP4(self, case):
@@ -417,7 +419,7 @@ class HeavyMassEstimator(object):
         met_sigma = 25.2
         if not self.recobjetrescalec1pdf_flag:
 	    if self.debug:	print "self.recobjetrescalec1pdf_flag is False!"
-	    met_sigma = 0.0	
+	    #met_sigma = 0.0	
         #genRandom.SetSeed()
 	while (it < self.iterations ):
 	    it += 1
@@ -431,17 +433,25 @@ class HeavyMassEstimator(object):
 	    if self.debug:
 		print "it ",it," self.eta_gen[0] ",self.eta_gen[0]," wmass_gen ",self.wmass_gen[0]
 	    #update met 
-	    if self.recobjetrescalec1pdf_flag:
-		while not self.bjetsCorrection():
-		    #print "fail to get bjetcorrection, try to get next one "
-		    pass
+	    met_dpx = 0.0; met_dpy = 0.0
+	    if self.METcorrectionType > 0:
+	    ## smear MET
 		met_dpx = genRandom.Gaus(0.0, met_sigma)
 		met_dpy = genRandom.Gaus(0.0, met_sigma)
-		met_corr = self.met + ROOT.TVector2(met_dpx, met_dpy)+ self.metCorrection()
+	    if self.bjetscorrectionType == 1 or (self.bjetscorrectionType == 2 and self.recobjetrescalec1pdf_flag):
+		icount = 1
+		while not self.bjetsCorrection():
+		    #print "fail to get bjetcorrection, try to get next one "
+		    icount += 1
+		    ##ignore if too many trials 
+		    if (icount > 10000): break
+		    pass
+                #print "smearing met ",(met_dpx, met_dpy)
             else:
-		met_corr = self.met
 		self.b1rescalefactor[0] = 1.0
 		self.b2rescalefactor[0] = 1.0
+	    met_corr = self.met + ROOT.TVector2(met_dpx, met_dpy)+ self.metCorrection()
+
 	    self.htoBB_p4 = self.b1jet_p4 * self.b1rescalefactor[0] + self.b2jet_p4 * self.b2rescalefactor[0]
 	    self.metpx_corr[0]= met_corr.Px()
 	    self.metpy_corr[0] = met_corr.Py()

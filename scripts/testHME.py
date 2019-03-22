@@ -18,6 +18,18 @@ jet1_p4.SetPxPyPzE(-50.568604,-73.598099,-107.297661,139.793747);
 jet2_p4.SetPxPyPzE(-54.522942,-41.693054,24.696209,73.266808);
 met_vec2.Set(57.0932, 58.3219);
 
+"""
+boosted region, signal mass = 1.6TeV
+also use no bjet correction + smear MET
+      hme.setBjetCorrectionType(0)
+      hme.setMETCorrectionType(6)
+lep1_p4.SetPxPyPzE(-92.187746,54.858173,321.941003,339.343497);
+lep2_p4.SetPxPyPzE(-13.944575,12.626226,101.495754,103.224322);
+jet1_p4.SetPxPyPzE(272.369183,-122.649673,-353.965748,465.031469);
+jet2_p4.SetPxPyPzE(0.0, 0.0, 0.0, 0.0);
+met_vec2.Set(-194.524071,9.588025)
+"""
+
 runHME = True
 truemass = 400.0
 nEv = 1

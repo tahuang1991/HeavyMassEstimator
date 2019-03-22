@@ -2,8 +2,7 @@ import os, sys, random
 import ROOT
 from ROOT import TFile,TChain,TH1F,TH2F,TLegend
 from math import *
-#from HeavyMassEstimator import *
-from HeavyMassEstimator_Boost import *
+from HeavyMassEstimator import *
 import argparse
 import numpy as np
 from array import array
@@ -28,14 +27,15 @@ inputfilename = "singal.root"## ntuple including the kinematics
 #inputfilename = "/fdata/hepx/store/user/taohuang/HHNtuple_20180412/GluGluToRadionToHHTo2B2VTo2L2Nu_M-400_narrow_13TeV-madgraph-v2/2A37ACDD-B119-E811-B6B6-A4BF01026229_Friend.root"
 inputfilename = "/home/taohuang/HeavyMassEstimator/data/skim_radion_hh_bbinc_m1600_0.root"
 TCha.Add(inputfilename)
-nStart = 103
-nEnd = 104
+#nStart = 103
+nStart = 0
+nEnd = -1
 if nEnd < 0:
     nEnd = TCha.GetEntries()
     print "nEnd ",nEnd
 
 
-f = ROOT.TFile("HMEntuples_Tao_bjetcorrecttype1_test.root", 'recreate'); f.cd()
+f = ROOT.TFile("HMEntuples_Tao_bjetcorrecttype0.root", 'recreate'); f.cd()
 TCha2 = TCha.CloneTree(0)
 
 ### add HME information to TCha2
@@ -89,7 +89,7 @@ TCha2.Branch("hme_mostprob_offshellWmass_weight2_reco",   hme_mostprob_offshellW
 TCha2.Branch("hme_stddev_offshellWmass_weight2_reco", hme_stddev_offshellWmass_weight2_reco,"hme_stddev_offshellWmass_weight2_reco/F")
 TCha2.Branch("hmecputime",                    hmecputime,                   "hmecputime/F")
 
-hme_min = 800.0; hme_max = 2800; hme_nbin = 1000
+hme_min = 200.0; hme_max = 4000; hme_nbin = 3800
 h_h2mass_weight_gen      = ROOT.TH1F("h_h2mass_weight_gen","", hme_nbin, hme_min, hme_max);  h_h2mass_weight_gen.GetXaxis().SetTitle("HME reco mass [GeV]");
 h_h2mass_weight_gen_sum  = ROOT.TH1F("h_h2mass_weight_gen_sum","", hme_nbin, hme_min, hme_max);  h_h2mass_weight_gen_sum.GetXaxis().SetTitle("HME reco mass [GeV]");
 h_h2mass_weight1_gen     = ROOT.TH1F("h_h2mass_weight1_gen","", hme_nbin, hme_min, hme_max);  h_h2mass_weight1_gen.GetXaxis().SetTitle("HME reco mass [GeV]");
@@ -284,6 +284,8 @@ for nEv in range(nStart, nEnd):
       hme.setKinematic(lep1_p4, lep2_p4, jet1_p4, jet2_p4, met_vec2, 0)
       hme.setIterations(args.iterations)
       hme.setBjetCorrectionType(0)
+      hme.setMETCorrectionType(6)
+      hme.showKinematic()
       hme.setDebug(False)
       hme.runHME()
       #hme.hme_offshellWmass.SetName("hme_offshellWmass_TCha.d_genlTCha.e"%nEv)
