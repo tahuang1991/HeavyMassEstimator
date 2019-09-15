@@ -271,7 +271,7 @@ heavyMassEstimator::runheavyMassEstimator(){//should not include any gen level i
         	std::cerr <<" heavyMassEstimator bjetrescale b1 "<< b1rescalefactor << " b2 "<< b2rescalefactor << std::endl;
 		//std::cerr <<" htobb after correction mass "<< htoBB_lorentz->M(); htoBB_lorentz->Print();
 	 }*/
-        if (fabs(htoBB_lorentz->M()-125)>1){
+        if (fabs(htoBB_lorentz->M()-125)>1 && verbose > 0){
 		continue;
 		std::cerr <<" error the htobb mass is not close 125, htobb_mass "<< htoBB_lorentz->M() << std::endl;
         	std::cerr <<" heavyMassEstimator bjetrescale b1 "<< b1rescalefactor << " b2 "<< b2rescalefactor << std::endl;
@@ -405,6 +405,7 @@ heavyMassEstimator::runheavyMassEstimator(){//should not include any gen level i
 	*htoWW_lorentz = *onshellW_lorentz+*offshellW_lorentz;
 	*h2tohh_lorentz = *htoWW_lorentz+*htoBB_lorentz;
 	if (h2tohh_lorentz->M()<245 or h2tohh_lorentz->M()>3800) {
+                 if (verbose > 0) {
 			std::cerr <<" heavyMassEstimator h2 mass is too small, or too large,  M_h " <<h2tohh_lorentz->M() << std::endl;
 			std::cerr <<" gen nu eta "<< eta_gen <<" nu phi "<< phi_gen << std::endl;
 			std::cerr <<" from heavyMassEstimator mu_onshell (px,py,pz, E)= ("<< mu_onshellW_lorentz->Px()<<", "<<  mu_onshellW_lorentz->Py()<<", "<< mu_onshellW_lorentz->Pz()<<", "<< mu_onshellW_lorentz->E() <<")"<< std::endl;
@@ -412,7 +413,8 @@ heavyMassEstimator::runheavyMassEstimator(){//should not include any gen level i
 			std::cerr <<" from heavyMassEstimator nu_onshell (px,py,pz, E)= ("<< nu_onshellW_lorentz->Px()<<", "<<  nu_onshellW_lorentz->Py()<<", "<< nu_onshellW_lorentz->Pz()<<", "<< nu_onshellW_lorentz->E() <<")"<< std::endl;
 			std::cerr <<" from heavyMassEstimator nu_offshell (px,py,pz, E)= ("<< nu_offshellW_lorentz->Px()<<", "<<  nu_offshellW_lorentz->Py()<<", "<< nu_offshellW_lorentz->Pz()<<", "<< nu_offshellW_lorentz->E() <<")"<< std::endl;
 			std::cerr <<" from heavyMassEstimator htoBB, mass "<< htoBB_lorentz->M()<<"(px,py,pz, E)= ("<<htoBB_lorentz->Px()<<", "<< htoBB_lorentz->Py() <<", "<< htoBB_lorentz->Pz() <<", "<< htoBB_lorentz->E()<<")" <<std::endl;
-		if (simulation){
+                 }
+                if (simulation && verbose > 0) {
     			std::cerr <<"following is pure gen level infromation " << std::endl;
     			std::cerr <<" nu1 px "<<nu1_lorentz_true->Px() << " py " <<nu1_lorentz_true->Py() << " pt "<< nu1_lorentz_true->Pt() 
 			<< " eta "<<nu1_lorentz_true->Eta() << " phi "<< nu1_lorentz_true->Phi() << std::endl;
@@ -431,9 +433,9 @@ heavyMassEstimator::runheavyMassEstimator(){//should not include any gen level i
 
 	//*met_vec2 = TVector2(nu_onshellW_lorentz->Px()+nu_offshellW_lorentz->Px(),
 	//				nu_onshellW_lorentz->Py()+nu_offshellW_lorentz->Py());
-	if (fabs(hmass_gen-htoWW_lorentz->M()) > 2) {
+        if (fabs(hmass_gen-htoWW_lorentz->M()) > 2 && verbose > 0) {
 	  std::cout << "  hmass_gen " << hmass_gen << " Higgs mass from heavyMassEstimator " << htoWW_lorentz->M() <<std::endl;
-	  verbose = 4;
+          //verbose = 4;
 	}
 
 	if (verbose > 3){
@@ -442,7 +444,7 @@ heavyMassEstimator::runheavyMassEstimator(){//should not include any gen level i
 	  std::cout << " htoWW mass "<< htoWW_lorentz->M(); htoWW_lorentz->Print();
 	  //std::cout << " htoBB mass "<< htoBB_lorentz->M(); htoBB_lorentz->Print();
 	  std::cout << " htoBB mass "<< htoBB_lorentz_true->M(); htoBB_lorentz_true->Print();
-	  verbose = 0;
+          //verbose = 0;
 	}
 	if (verbose > 3 && (h2tohh_lorentz->Pt()/h2tohh_lorentz->E())>0.0000001) {
 	  std::cout << " h2tohh mass "<< h2tohh_lorentz->M() <<" pt " << h2tohh_lorentz->Pt();
@@ -1129,7 +1131,7 @@ heavyMassEstimator::weightfromonshellnupt(float nupt){
   weight = -16.925+12.4066*nupt-0.2884*std::pow(nupt,2)+0.00203*std::pow(nupt,3)+7.695e-7*std::pow(nupt,4)
     -7.2191e-8*std::pow(nupt,5)+2.499e-10*std::pow(nupt,6);
   if (weight < 0 && nupt<5) return 0.0;
-  if (weight < 0) std::cout << " error! nupt " << nupt << " weight " << weight << std::endl;
+  if (weight < 0 && verbose > 0) std::cout << " error! nupt " << nupt << " weight " << weight << std::endl;
   weight = weight/max;
   return weight;
 }
@@ -1245,10 +1247,10 @@ heavyMassEstimator::nulorentz_offshellW(TLorentzVector* jetslorentz,
   }
   nu2lorentz->SetPtEtaPhiM(nu_tmp_pt, nu_tmp_eta, nu_tmp_phi, 0);
   TLorentzVector* htoww_tmp = new TLorentzVector(*tmplorentz+*nu2lorentz);
-  if (abs(htoww_tmp->M()-hMass) >2){
+  if (abs(htoww_tmp->M()-hMass) >2 && verbose > 0){
     std::cout <<" set Higgs Mass" << hMass << " heavyMassEstimator higgs mass" << htoww_tmp->M() << std::endl;
     htoww_tmp->Print();
-    verbose = 1;
+    //verbose = 1;
   }
   if (verbose > 0){
     std::cout << "tmplorentz mass " << tmplorentz->M(); tmplorentz->Print();
@@ -1322,10 +1324,10 @@ heavyMassEstimator::nulorentz_offshellW(TVector2* met,
   }
   nu2lorentz->SetPtEtaPhiM(nu_tmp_pt, nu_tmp_eta, nu_tmp_phi, 0);
   TLorentzVector* htoww_tmp = new TLorentzVector(*tmplorentz+*nu2lorentz);
-  if (abs(htoww_tmp->M()-hMass) >2){
+  if (abs(htoww_tmp->M()-hMass) >2 && verbose > 0){
     std::cout <<" set Higgs Mass" << hMass << " heavyMassEstimator higgs mass" << htoww_tmp->M() << std::endl;
     htoww_tmp->Print();
-    verbose = 1;
+    //verbose = 1;
   }
   if (verbose > 0){
     std::cout << "tmplorentz mass " << tmplorentz->M(); tmplorentz->Print();
@@ -1357,7 +1359,9 @@ heavyMassEstimator::bjetsCorrection(){
     b2lorentz = *hme_b2jet_lorentz;
   }
   else {
-    std::cout <<"wired b1jet is not jet with larger pt "<< std::endl;
+    if(verbose > 0) {
+        std::cout <<"wired b1jet is not jet with larger pt "<< std::endl;
+    }
     b1lorentz = *hme_b2jet_lorentz;
     b2lorentz = *hme_b1jet_lorentz;
   }
@@ -1365,7 +1369,7 @@ heavyMassEstimator::bjetsCorrection(){
   float x1 = b2lorentz.M2();
   float x2 = 2*rescalec1*(b1lorentz*b2lorentz);
   float x3 = rescalec1*rescalec1*b1lorentz.M2()-125*125;
-  if (x2<0) std::cerr <<"error bjets lorentzvector dot productor less than 0 " << std::endl;
+  if (x2<0 && verbose > 0) std::cerr <<"error bjets lorentzvector dot productor less than 0 " << std::endl;
   /*std::cout <<" b2lorentz mass "<<  b2lorentz.M2();  b2lorentz.Print();
   std::cout <<" rescale1  "<< rescalec1 <<" x1 "<< x1 <<" x2 " << x2 << " x3 "<< x3 << std::endl;
   std::cout <<"c2 solution1 " << (-x2+std::sqrt(x2*x2-4*x1*x3))/(2*x1)<<" solution2 "<<(-x2-std::sqrt(x2*x2-4*x1*x3))/(2*x1)<<std::endl;
@@ -1386,7 +1390,9 @@ heavyMassEstimator::bjetsCorrection(){
     b1rescalefactor = rescalec1;
     b2rescalefactor = rescalec2;
   }else{
-    std::cout <<"wired b1jet is not jet with larger pt "<< std::endl;
+    if(verbose > 0) {
+        std::cout <<"wired b1jet is not jet with larger pt "<< std::endl;
+    }
     b2rescalefactor = rescalec1;
     b1rescalefactor = rescalec2;
   }
