@@ -12,75 +12,27 @@
 #include <time.h>       /* time */
 
 //constructor
-heavyMassEstimator::heavyMassEstimator(TLorentzVector* lep1_lorentz, TLorentzVector* lep2_lorentz, TLorentzVector* b1jet_lorentz, TLorentzVector* b2jet_lorentz,
-	TLorentzVector* totjets_lorentz,TLorentzVector* met_lorentz, 
-        bool PUsample_, int ievent, bool weightfromonshellnupt_func, bool weightfromonshellnupt_hist, bool weightfromonoffshellWmass_hist,
-        int iterations, std::string RefPDFfile, bool useMET, int bjetrescaleAlgo, int metcorrection, int verbose_
-	):
-    heavyMassEstimator(lep1_lorentz, lep2_lorentz, b1jet_lorentz, b2jet_lorentz, totjets_lorentz, met_lorentz, 
-	NULL, NULL, NULL, NULL, NULL, -1, false, 
-	PUsample_, ievent, weightfromonshellnupt_func, weightfromonshellnupt_hist, weightfromonoffshellWmass_hist, 
-	iterations, RefPDFfile, useMET, bjetrescaleAlgo, metcorrection, verbose_)
-
+heavyMassEstimator::heavyMassEstimator(bool PUsample, bool weightfromonshellnupt_func, bool weightfromonshellnupt_hist, bool weightfromonoffshellWmass_hist,
+        int iterations, const std::string& RefPDFfile, bool useMET, int bjetrescaleAlgo, int metcorrection, int verbose)
+  : hmetree_(nullptr)
+  , heavyMassEstimator_h2Mass_(nullptr)
+  , heavyMassEstimator_h2Massweight1_(nullptr)
+  , heavyMassEstimator_h2Massweight4_(nullptr)
+  , file_(nullptr)
+  , wmasshist_(nullptr)
+  , onoffshellWmass_hist_(nullptr)
+  , onshellnupt_hist_(nullptr)
+  , bjetrescalec1_hist_(nullptr)
+  , bjetrescalec2_hist_(nullptr)
+  , rnd_(nullptr)
 {
 
-}
+   heavyMassEstimatordebug_=false;
+   if (heavyMassEstimatordebug_) std::cout <<" heavyMassEstimator::Debug::1 "<< std::endl;
 
+   PUsample_ = PUsample;
 
-//constructor
-heavyMassEstimator::heavyMassEstimator(TLorentzVector* lep1_lorentz, TLorentzVector* lep2_lorentz, TLorentzVector* b1jet_lorentz, TLorentzVector* b2jet_lorentz,
-	TLorentzVector* totjets_lorentz,TLorentzVector* met_lorentz, TLorentzVector* nu1_lorentz, TLorentzVector* nu2_lorentz,
-	TLorentzVector* b_genp_lorentz,TLorentzVector* bbar_genp_lorentz, TLorentzVector* h2_lorentz, int onshellMarker_,// simulation only
-         bool simulation_, bool PUsample_, int ievent, bool weightfromonshellnupt_func, bool weightfromonshellnupt_hist, bool weightfromonoffshellWmass_hist,
-        int iterations, std::string RefPDFfile, bool useMET, int bjetrescaleAlgo, int metcorrection, int verbose_
-	)
-{
-
-
-   heavyMassEstimatordebug=false;
-   if (heavyMassEstimatordebug) std::cout <<" heavyMassEstimator::Debug::1 "<< std::endl;
-   hme_lep1_lorentz = lep1_lorentz;
-   hme_lep2_lorentz = lep2_lorentz;
-   hme_b1jet_lorentz = b1jet_lorentz;
-   hme_b2jet_lorentz = b2jet_lorentz;
-   hme_totjets_lorentz = totjets_lorentz;
-   hme_bjets_lorentz = new TLorentzVector(*b1jet_lorentz+*b2jet_lorentz);
-   hmemet_vec2 = new TVector2(met_lorentz->Px(),met_lorentz->Py());
-
-   //std::cout <<" lep1 lorentz "; lep1_lorentz->Print();
-   //std::cout <<" b1 jet lorentz "; b1jet_lorentz->Print();
-   //std::cout <<" b1 gen lorentz "; b_genp_lorentz->Print();
-   simulation = simulation_;
-   PUsample = PUsample_;
-	
-   if (heavyMassEstimatordebug)  std::cout <<(simulation_? "in heavyMassEstimator simulation is true ":" in heavyMassEstimator simulation is false ")<< std::endl;	
-   onshellMarker = onshellMarker_;
-   if (simulation){
-	nu1_lorentz_true = nu1_lorentz;
-   	nu2_lorentz_true = nu2_lorentz;
-        
-        
-        if (onshellMarker == 1){
-        	onshellW_lorentz_true = new TLorentzVector(*nu1_lorentz_true + *hme_lep1_lorentz);
-        	offshellW_lorentz_true = new TLorentzVector(*nu2_lorentz_true + *hme_lep2_lorentz);
-        }
-        else if (onshellMarker ==2 ){
-        	offshellW_lorentz_true = new TLorentzVector(*nu1_lorentz_true + *hme_lep1_lorentz);
-        	onshellW_lorentz_true = new TLorentzVector(*nu2_lorentz_true + *hme_lep2_lorentz);
-	} 
-        else std::cout <<" onshellMarker input error"  << std::endl;
-
-        htoWW_lorentz_true = new TLorentzVector(*offshellW_lorentz_true + *onshellW_lorentz_true);
-        h2tohh_lorentz_true = new TLorentzVector(*h2_lorentz); 
-	b1_lorentz = b_genp_lorentz;
-        b2_lorentz = bbar_genp_lorentz;
-   	htoBB_lorentz_true = new TLorentzVector(*b_genp_lorentz+*bbar_genp_lorentz);
-	ideal_met_lorentz.SetXYZM(nu1_lorentz_true->Px()+nu2_lorentz_true->Px(),nu1_lorentz_true->Py()+nu2_lorentz_true->Py(),0,0);
-   }
-   
-
-   verbose = verbose_; 
-   iev = ievent;
+   verbose_ = verbose; 
 
    weightfromonshellnupt_func_ = weightfromonshellnupt_func;
    weightfromonshellnupt_hist_ = weightfromonshellnupt_hist;
@@ -92,53 +44,47 @@ heavyMassEstimator::heavyMassEstimator(TLorentzVector* lep1_lorentz, TLorentzVec
    metcorrection_ = metcorrection;//0.no correction; 1. simple rescale, 2.elaborate rescale, -1.ideal case
    bjetrescale_ = bjetrescaleAlgo;//0.no rescale; 1.simple rescale; 2.elaborate rescale, -1.ideal case
    writehmetree_ = false;
-
-   //TFile filetest(RefPDFfile_.c_str(),"READ");
-   //file_ref = filetest;
    
-   //writehmetree_ = false;
-   std::stringstream ss;
-   ss << "hmetree_" << iev;
-   const std::string name(ss.str());
-   //if (writehmetree_) hmetree = fs->make<TTree>(name.c_str(), name.c_str());
-   if (not writehmetree_) hmetree = new TTree(name.c_str(), name.c_str());
-
    std::stringstream histss;
    std::stringstream histweight1ss;
    std::stringstream histweight4ss;
-   histss << "heavyMassEstimator_h2Mass_" << iev;
-   histweight1ss << "heavyMassEstimator_h2Mass_weight1_" << iev;
-   histweight4ss << "heavyMassEstimator_h2Mass_weight4_" << iev;
+   histss << "heavyMassEstimator_h2Mass_" << iev_;
+   histweight1ss << "heavyMassEstimator_h2Mass_weight1_" << iev_;
+   histweight4ss << "heavyMassEstimator_h2Mass_weight4_" << iev_;
    const std::string histname(histss.str());
    const std::string histweight1name(histweight1ss.str());
    const std::string histweight4name(histweight4ss.str());
-   heavyMassEstimator_h2Mass = TH1F(histname.c_str(),histname.c_str(), 3800, 200, 4000);
-   heavyMassEstimator_h2Massweight1 = TH1F(histweight1name.c_str(),histweight1name.c_str(), 3800, 200, 4000);
-   heavyMassEstimator_h2Massweight4 = TH1F(histweight4name.c_str(),histweight4name.c_str(), 3800, 200, 4000);
-   initTree(hmetree);
+   heavyMassEstimator_h2Mass_ = new TH1F(histname.c_str(),histname.c_str(), 3800, 200, 4000);
+   heavyMassEstimator_h2Massweight1_ = new TH1F(histweight1name.c_str(),histweight1name.c_str(), 3800, 200, 4000);
+   heavyMassEstimator_h2Massweight4_ = new TH1F(histweight4name.c_str(),histweight4name.c_str(), 3800, 200, 4000);
    
-   b1rescalefactor = 1;
-   b2rescalefactor = 1;
-   rescalec1 = 1;
-   rescalec2 = 1;
-   
-   nu_onshellW_lorentz = new TLorentzVector();
-   nu_offshellW_lorentz = new TLorentzVector();
-   offshellW_lorentz = new TLorentzVector();
-   onshellW_lorentz = new TLorentzVector();
-   htoWW_lorentz = new TLorentzVector();
-   htoBB_lorentz = new TLorentzVector(*hme_bjets_lorentz);
-   h2tohh_lorentz = new TLorentzVector();
-   met_vec2 = new TVector2(hmemet_vec2->Px(), hmemet_vec2->Py());
-   //printTrueLorentz(); 
-   file = TFile::Open(RefPDFfile_.c_str(),"READ");
-   if (heavyMassEstimatordebug) std::cout <<" heavyMassEstimator::Debug::2 "<< std::endl;
+   file_ = TFile::Open(RefPDFfile_.c_str(),"READ");
+   wmasshist_ = readoutonshellWMassPDF(); 
+   onoffshellWmass_hist_ = readoutonoffshellWMassPDF(); 
+   onshellnupt_hist_ = readoutonshellnuptPDF(); 
+   bjetrescalec1_hist_ = readoutbjetrescalec1PDF(); 
+   bjetrescalec2_hist_ = readoutbjetrescalec2PDF(); 
+   //std::cout <<" rescale priori distribution 1" << std::endl;
+   //std::cout <<" onshellnupt max content " <<onshellnupt_hist_->GetBinContent(onshellnupt_hist_->GetMaximumBin()) << std::endl;
+   (const_cast<TH1F*>(onshellnupt_hist_))->Scale(1.0/onshellnupt_hist_->GetBinContent(onshellnupt_hist_->GetMaximumBin()));
+   (const_cast<TH2F*>(onoffshellWmass_hist_))->Scale(1.0/onoffshellWmass_hist_->GetBinContent(onoffshellWmass_hist_->GetMaximumBin()));
+   (const_cast<TH1F*>(bjetrescalec1_hist_))->Scale(1.0/bjetrescalec1_hist_->GetBinContent(bjetrescalec1_hist_->GetMaximumBin()));
+   (const_cast<TH1F*>(bjetrescalec2_hist_))->Scale(1.0/bjetrescalec2_hist_->GetBinContent(bjetrescalec2_hist_->GetMaximumBin()));
+   //replace above by normalization
+   //(const_cast<TH1F*>(onshellnupt_hist_))->Scale(1.0/onshellnupt_hist->GetBinContent(onshellnupt_hist_->GetMaximumBin()));
+   //(const_cast<TH1F*>(onoffshellWmass_hist_))->Scale(1.0/onoffshellWmass_hist->GetBinContent(onoffshellWmass_hist_->GetMaximumBin()));
+   //(const_cast<TH1F*>(bjetrescalec2_hist_))->Scale(1.0/bjetrescalec2_hist_->GetBinContent(bjetrescalec2_hist_->GetMaximumBin()));
+   //std::cout <<" rescale priori distribution 2" << std::endl;
+   //file_->Close();
+
+   rnd_ = new TRandom3();
+
+   if (heavyMassEstimatordebug_) std::cout <<" heavyMassEstimator::Debug::2 "<< std::endl;
 }
 
 heavyMassEstimator::heavyMassEstimator(){
 
   //std::cout <<" empty constructor " << std::endl;
-
 
 }
 
@@ -146,32 +92,120 @@ heavyMassEstimator::heavyMassEstimator(){
 //deconstructor
 heavyMassEstimator::~heavyMassEstimator(){
 
-  //std::cout << " deconstructor 1 " << std::endl;
-
-  delete hmemet_vec2;
-  delete hme_bjets_lorentz;
-  if (simulation){
-
-    delete offshellW_lorentz_true;
-    delete onshellW_lorentz_true;
-    delete htoBB_lorentz_true;
-    delete htoWW_lorentz_true;
-    delete h2tohh_lorentz_true;
-  }
-  delete nu_onshellW_lorentz;
-  delete nu_offshellW_lorentz;
-  delete onshellW_lorentz;
-  delete offshellW_lorentz;
-  delete htoWW_lorentz;
-  delete htoBB_lorentz;
-  delete h2tohh_lorentz;
-  delete met_vec2;
-  //delete file_ref;
-  if (not writehmetree_) delete hmetree;
+  delete hmetree_;
+  delete heavyMassEstimator_h2Mass_;
+  delete heavyMassEstimator_h2Massweight1_;
+  delete heavyMassEstimator_h2Massweight4_;
+  delete wmasshist_;
+  delete onoffshellWmass_hist_;
+  delete onshellnupt_hist_;
+  delete bjetrescalec1_hist_;
+  delete bjetrescalec2_hist_;
+  delete file_;
+  delete rnd_;
 
 }
 
+void 
+heavyMassEstimator::set_inputs(const TLorentzVector& lep1_lorentz, const TLorentzVector& lep2_lorentz, 
+        const TLorentzVector& b1jet_lorentz, const TLorentzVector& b2jet_lorentz,
+	const TLorentzVector& totjets_lorentz, const TLorentzVector& met_lorentz, 
+        int ievent)
+{
 
+  set_inputs(lep1_lorentz, lep2_lorentz, 
+    b1jet_lorentz, b2jet_lorentz, 
+    totjets_lorentz, met_lorentz, 
+    NULL, NULL, 
+    NULL, NULL, 
+    NULL, 
+    -1, 
+    false,
+    ievent);
+
+}
+
+void 
+heavyMassEstimator::set_inputs(const TLorentzVector& lep1_lorentz, const TLorentzVector& lep2_lorentz, 
+        const TLorentzVector& b1jet_lorentz, const TLorentzVector& b2jet_lorentz,
+	const TLorentzVector& totjets_lorentz, const TLorentzVector& met_lorentz, 
+        const TLorentzVector* nu1_lorentz, const TLorentzVector* nu2_lorentz,
+	const TLorentzVector* b_genp_lorentz, const TLorentzVector* bbar_genp_lorentz, 
+        const TLorentzVector* h2_lorentz, 
+        int onshellMarker, // simulation only
+        bool simulation, 
+        int ievent)
+{
+  hme_lep1_lorentz_ = lep1_lorentz;
+  hme_lep2_lorentz_ = lep2_lorentz;
+  hme_b1jet_lorentz_ = b1jet_lorentz;
+  hme_b2jet_lorentz_ = b2jet_lorentz;
+  hme_totjets_lorentz_ = totjets_lorentz;
+  hme_bjets_lorentz_ = b1jet_lorentz + b2jet_lorentz;
+  hmemet_vec2_ = TVector2(met_lorentz.Px(),met_lorentz.Py());
+
+  //std::cout <<" lep1 lorentz "; lep1_lorentz.Print();
+  //std::cout <<" b1 jet lorentz "; b1jet_lorentz.Print();
+  //std::cout <<" b1 gen lorentz "; b_genp_lorentz.Print();
+  simulation_ = simulation;
+
+  onshellMarker_ = onshellMarker;
+  if (simulation_){
+    assert(nu1_lorentz && nu2_lorentz && b_genp_lorentz && bbar_genp_lorentz && h2_lorentz); 
+    nu1_lorentz_true_ = *nu1_lorentz;
+    nu2_lorentz_true_ = *nu2_lorentz;
+        
+    if (onshellMarker_ == 1){
+      onshellW_lorentz_true_ = nu1_lorentz_true_ + hme_lep1_lorentz_;
+      offshellW_lorentz_true_ = nu2_lorentz_true_ + hme_lep2_lorentz_;
+    }
+    else if (onshellMarker_ ==2 ){
+      offshellW_lorentz_true_ = nu1_lorentz_true_ + hme_lep1_lorentz_;
+      onshellW_lorentz_true_ = nu2_lorentz_true_ + hme_lep2_lorentz_;
+    } 
+    else std::cout <<" onshellMarker input error"  << std::endl;
+
+    htoWW_lorentz_true_ = offshellW_lorentz_true_ + onshellW_lorentz_true_;
+    h2tohh_lorentz_true_ = *h2_lorentz; 
+    b1_lorentz_ = *b_genp_lorentz;
+    b2_lorentz_ = *bbar_genp_lorentz;
+    htoBB_lorentz_true_ = *b_genp_lorentz + *bbar_genp_lorentz;
+    ideal_met_lorentz_.SetXYZM(nu1_lorentz_true_.Px()+nu2_lorentz_true_.Px(),nu1_lorentz_true_.Py()+nu2_lorentz_true_.Py(),0,0);
+  }
+   
+  b1rescalefactor_ = 1;
+  b2rescalefactor_ = 1;
+  rescalec1_ = 1;
+  rescalec2_ = 1;
+
+  nu_onshellW_lorentz_ = TLorentzVector();
+  nu_offshellW_lorentz_ = TLorentzVector();
+  offshellW_lorentz_ = TLorentzVector();
+  onshellW_lorentz_ = TLorentzVector();
+  htoWW_lorentz_ = TLorentzVector();
+  htoBB_lorentz_ = hme_bjets_lorentz_;
+  h2tohh_lorentz_ = TLorentzVector();
+  met_vec2_ = TVector2(hmemet_vec2_.Px(), hmemet_vec2_.Py());
+  //printTrueLorentz(); 
+
+  iev_ = ievent;
+
+  heavyMassEstimator_h2Mass_->Reset();
+  heavyMassEstimator_h2Massweight1_->Reset();
+  heavyMassEstimator_h2Massweight4_->Reset();
+
+  if ( writehmetree_ ) {
+    delete hmetree_;
+    std::stringstream ss;
+    ss << "hmetree_" << iev_;
+    const std::string name(ss.str());
+    //hmetree_ = fs->make<TTree>(name.c_str(), name.c_str());
+    hmetree_ = new TTree(name.c_str(), name.c_str());
+    initTree(hmetree_);
+  }
+
+  runheavyMassEstimator();
+}
 
 
 //================================================================================================================
@@ -189,92 +223,73 @@ bool
 heavyMassEstimator::runheavyMassEstimator(){//should not include any gen level information here in final version
 
   // genetated (eta,phi) pair
-  eta_gen = 0;
-  phi_gen = 0;
+  eta_gen_ = 0;
+  phi_gen_ = 0;
   //PU0:14.8,  PU40:25.2
-  float met_sigma = (PUsample? 25.2:14.8);
-  //std::cout <<(PUsample?" PUsample ":"Not PUsample ")<< " met_sigma "<< met_sigma << std::endl;
-  //hmetree->SetDebug(100,0,9999999);
+  float met_sigma = (PUsample_? 25.2:14.8);
+  //std::cout <<(PUsample_?" PUsample ":"Not PUsample ")<< " met_sigma "<< met_sigma << std::endl;
+  //if (writehmetree_) hmetree_->SetDebug(100,0,9999999);
   //int count = 100000;
   bool validrun = false;
-  eta_mean=0;
-  eta_rms=1.403;
+  eta_mean_=0;
+  eta_rms_=1.403;
   //std::cout <<" time null " << time(NULL) << std::endl;
   seed_ = time(NULL);
-  TRandom3 *generator = new TRandom3();
-  generator->SetSeed(seed_+iev);
+  rnd_->SetSeed(seed_+iev_);
   //TF1* wmasspdf = new TF1("wmasspdf","exp(x*7.87e-3+1.69)+603.47*exp(-0.5*((x-80.1)/2.0)**2)",50,90);
 
-
-   if (heavyMassEstimatordebug) std::cout <<" heavyMassEstimator::Debug::3  start runheavyMassEstimator() in heavyMassEstimator class "  << std::endl; 
+   if (heavyMassEstimatordebug_) std::cout <<" heavyMassEstimator::Debug::3  start runheavyMassEstimator() in heavyMassEstimator class "  << std::endl; 
    float nu_onshellW_pt =0;
-   wmass_gen = 80.3;// initial value
+   wmass_gen_ = 80.3;// initial value
    float step,random01;
-   TH1F* wmasshist = readoutonshellWMassPDF(); 
-   TH2F* onoffshellWmass_hist = readoutonoffshellWMassPDF(); 
-   TH1F* onshellnupt_hist = readoutonshellnuptPDF(); 
-   TH1F* bjetrescalec1_hist = readoutbjetrescalec1PDF(); 
-   TH1F* bjetrescalec2_hist = readoutbjetrescalec2PDF(); 
-   //std::cout <<" rescale priori distribution 1" << std::endl;
-   //std::cout <<" onshellnupt max content " <<onshellnupt_hist->GetBinContent(onshellnupt_hist->GetMaximumBin()) << std::endl;
-   onshellnupt_hist->Scale(1.0/onshellnupt_hist->GetBinContent(onshellnupt_hist->GetMaximumBin()));
-   onoffshellWmass_hist->Scale(1.0/onoffshellWmass_hist->GetBinContent(onoffshellWmass_hist->GetMaximumBin()));
-   bjetrescalec1_hist->Scale(1.0/bjetrescalec1_hist->GetBinContent(bjetrescalec1_hist->GetMaximumBin()));
-   bjetrescalec2_hist->Scale(1.0/bjetrescalec2_hist->GetBinContent(bjetrescalec2_hist->GetMaximumBin()));
-   //replace above by normalization
-   //onshellnupt_hist->Scale(1.0/onshellnupt_hist->GetBinContent(onshellnupt_hist->GetMaximumBin()));
-   //onoffshellWmass_hist->Scale(1.0/onoffshellWmass_hist->GetBinContent(onoffshellWmass_hist->GetMaximumBin()));
-   //bjetrescalec2_hist->Scale(1.0/bjetrescalec2_hist->GetBinContent(bjetrescalec2_hist->GetMaximumBin()));
-   //std::cout <<" rescale priori distribution 2" << std::endl;
-   
   // printTrueLorentz();
 
   for (int i = 0; i < iterations_ ; i++){
-
-    eta_gen = generator->Uniform(-6,6); 
-    phi_gen = generator->Uniform(-3.1415926, 3.1415926);
-    //wmass_gen = generator->Gaus(80.385,0.015);
-    hmass_gen = generator->Gaus(125.03,0.3);
+    eta_gen_ = rnd_->Uniform(-6,6); 
+    phi_gen_ = rnd_->Uniform(-3.1415926, 3.1415926);
+    //wmass_gen_ = rnd_->Gaus(80.385,0.015);
+    hmass_gen_ = rnd_->Gaus(125.03,0.3);
     if (metcorrection_>3){
-    	metpx_gen = generator->Gaus(0.0,met_sigma);
-   	metpy_gen = generator->Gaus(0.0,met_sigma);
+    	metpx_gen_ = rnd_->Gaus(0.0,met_sigma);
+   	metpy_gen_ = rnd_->Gaus(0.0,met_sigma);
     }else {
-	metpx_gen = 0;
-   	metpy_gen = 0;
+	metpx_gen_ = 0;
+   	metpy_gen_ = 0;
 	}
-    TVector2 met_gen = TVector2(metpx_gen, metpy_gen);
-    
+    TVector2 met_gen = TVector2(metpx_gen_, metpy_gen_);
+
     //generate onshell Wmass
-    step = generator->Uniform(-4,4);
-    //step = generator->Gaus(0,8);
-    random01 = generator->Uniform(0,1);
-    //wmass_gen = onshellWMassRandomWalk(wmass_gen, step, random01);
-    wmass_gen = onshellWMassRandomWalk(wmass_gen, step, random01, wmasshist);
+    step = rnd_->Uniform(-4,4);
+    //step = rnd_->Gaus(0,8);
+    random01 = rnd_->Uniform(0,1);
+    //wmass_gen_ = onshellWMassRandomWalk(wmass_gen_, step, random01);
+    wmass_gen_ = onshellWMassRandomWalk(wmass_gen_, step, random01, wmasshist_);
     if (bjetrescale_ ==1){
 	//type1 bjet correction
-	b1rescalefactor = 125/hme_bjets_lorentz->M();
-	b2rescalefactor = 125/hme_bjets_lorentz->M();
-	rescalec1 = b1rescalefactor; rescalec2 = b2rescalefactor;
+	b1rescalefactor_ = 125/hme_bjets_lorentz_.M();
+	b2rescalefactor_ = 125/hme_bjets_lorentz_.M();
+	rescalec1_ = b1rescalefactor_; 
+        rescalec2_ = b2rescalefactor_;
     }
     if (bjetrescale_ ==2){
 	//type2 bjet correction
-	rescalec1 = bjetrescalec1_hist->GetRandom();
+	rescalec1_ = bjetrescalec1_hist_->GetRandom();
 	//std::cout <<" rescale c1 " << rescalec1 << std::endl;
 	bool hascorrection =  bjetsCorrection();
 	if (not hascorrection) continue;
-	//*htoBB_lorentz = b1rescalefactor*b1lorentz+b2rescalefactor*b2lorentz; 
+	//htoBB_lorentz_ = b1rescalefactor_*b1lorentz_ + b2rescalefactor_*b2lorentz_; 
     } 
     if (bjetrescale_>0){
-	*htoBB_lorentz = b1rescalefactor*(*hme_b1jet_lorentz)+b2rescalefactor*(*hme_b2jet_lorentz);
-	/*if (b2rescalefactor > 4 or b2rescalefactor < 0.1){
+	htoBB_lorentz_ = b1rescalefactor_*hme_b1jet_lorentz_ + b2rescalefactor_*hme_b2jet_lorentz_;
+	/*if (b2rescalefactor_ > 4 or b2rescalefactor_ < 0.1){
 		//continue;
-        	std::cerr <<" heavyMassEstimator bjetrescale b1 "<< b1rescalefactor << " b2 "<< b2rescalefactor << std::endl;
-		//std::cerr <<" htobb after correction mass "<< htoBB_lorentz->M(); htoBB_lorentz->Print();
+        	std::cerr <<" heavyMassEstimator bjetrescale b1 "<< b1rescalefactor_ << " b2 "<< b2rescalefactor_ << std::endl;
+		//std::cerr <<" htobb after correction mass "<< htoBB_lorentz_.M(); htoBB_lorentz_.Print();
 	 }*/
-        if (fabs(htoBB_lorentz->M()-125)>1 && verbose > 0){
+        if (fabs(htoBB_lorentz_.M()-125)>1 && verbose_ > 0){
 		continue;
-		std::cerr <<" error the htobb mass is not close 125, htobb_mass "<< htoBB_lorentz->M() << std::endl;
-        	std::cerr <<" heavyMassEstimator bjetrescale b1 "<< b1rescalefactor << " b2 "<< b2rescalefactor << std::endl;
+		std::cerr <<" error the htobb mass is not close 125, htobb_mass "<< htoBB_lorentz_.M() << std::endl;
+        	std::cerr <<" heavyMassEstimator bjetrescale b1 "<< b1rescalefactor_ << " b2 "<< b2rescalefactor_ << std::endl;
 	 }
 		
 	}
@@ -283,241 +298,237 @@ heavyMassEstimator::runheavyMassEstimator(){//should not include any gen level i
     if ((metcorrection_-3)>0 and  ((metcorrection_ -3)== bjetrescale_ or metcorrection_==bjetrescale_)) metCorrection();
     else if ((metcorrection_-3) ==1 or metcorrection_==1){
 	//no bjet correction but does correct MET according to type1 bjet correction
-	b1rescalefactor = 125/hme_bjets_lorentz->M();
-	b2rescalefactor = 125/hme_bjets_lorentz->M();
+	b1rescalefactor_ = 125/hme_bjets_lorentz_.M();
+	b2rescalefactor_ = 125/hme_bjets_lorentz_.M();
 	metCorrection(); 
     }
     else if ((metcorrection_-3) ==2 or metcorrection_==2){
 	//no bjet correction but does correct MET according to type2 bjet correction
-	rescalec1 = bjetrescalec1_hist->GetRandom();
-	bool hascorrection = bjetsCorrection();//calculate b1rescalefactor b2rescalefactor
+	rescalec1_ = bjetrescalec1_hist_->GetRandom();
+	bool hascorrection = bjetsCorrection();//calculate b1rescalefactor_ b2rescalefactor_
 	if (not hascorrection) continue;
 	metCorrection(); 
     }
     else if (metcorrection_ > 5){
 	//no bjet correction. only smearing MET according to MET resolution
-        b1rescalefactor = 1.0;
-        b2rescalefactor = 1.0;
+        b1rescalefactor_ = 1.0;
+        b2rescalefactor_ = 1.0;
 	//bjetsCorrection();
 	metCorrection(); 
     }
-    
 
-    //std::cout <<" Met input px "<< hmemet_vec2->Px() << " py "<< hmemet_vec2->Py() <<" pt "<< hmemet_vec2->Mod() <<std::endl;
-    //std::cout <<" met before smearing metpx_gen " << met_vec2->Px() <<" metpy_gen " << met_vec2->Py() <<std::endl;
-    //std::cout <<" metpx_gen " << metpx_gen <<" metpy_gen " << metpy_gen <<std::endl;
-    if (metcorrection_>3 and useMET_) *met_vec2 = *met_vec2+met_gen;
-    if (heavyMassEstimatordebug) std::cout <<" heavyMassEstimator::Debug::4 in heavyMassEstimator loop met for heavyMassEstimator px " << met_vec2->Px() <<" py " << met_vec2->Py() <<std::endl;
-    if (bjetrescale_ == -1 and simulation)
-	*htoBB_lorentz = *htoBB_lorentz_true;
-    if (metcorrection_ ==-1 and simulation)
-	*met_vec2 = TVector2(nu1_lorentz_true->Px()+nu2_lorentz_true->Px(),nu1_lorentz_true->Py()+nu2_lorentz_true->Py());
+    //std::cout <<" Met input px "<< hmemet_vec2_.Px() << " py "<< hmemet_vec2_.Py() <<" pt "<< hmemet_vec2_.Mod() <<std::endl;
+    //std::cout <<" met before smearing metpx_gen " << met_vec2_.Px() <<" metpy_gen " << met_vec2_.Py() <<std::endl;
+    //std::cout <<" metpx_gen " << metpx_gen_ <<" metpy_gen " << metpy_gen_ <<std::endl;
+    if (metcorrection_>3 and useMET_) met_vec2_ = met_vec2_+met_gen;
+    if (heavyMassEstimatordebug_) std::cout <<" heavyMassEstimator::Debug::4 in heavyMassEstimator loop met for heavyMassEstimator px " << met_vec2_.Px() <<" py " << met_vec2_.Py() <<std::endl;
+    if (bjetrescale_ == -1 && simulation_)
+	htoBB_lorentz_ = htoBB_lorentz_true_;
+    if (metcorrection_ ==-1 && simulation_)
+	met_vec2_ = TVector2(nu1_lorentz_true_.Px()+nu2_lorentz_true_.Px(),nu1_lorentz_true_.Py()+nu2_lorentz_true_.Py());
     /*
-    std::cout <<" heavyMassEstimator metCorrection b1 "<< b1rescalefactor << " b2 "<< b2rescalefactor << std::endl;
-    std::cout <<"b1jet Px "<<hme_b1jet_lorentz->Px() <<" Py "<<hme_b1jet_lorentz->Py() 
-	<<" b2jet Px "<< hme_b2jet_lorentz->Px() <<" Py "<<hme_b2jet_lorentz->Py() << std::endl;
-    std::cout <<"sum of two nu  px "<<nu1_lorentz_true->Px()+nu2_lorentz_true->Px() <<" py "<<nu1_lorentz_true->Py()+nu2_lorentz_true->Py()<<std::endl;
-    std::cout <<" heavyMassEstimator input met  px "<< hmemet_vec2->Px() << " py "<<hmemet_vec2->Py() <<" pt "<< hmemet_vec2->Mod() <<std::endl;
-    std::cout <<" met after correction px "<< met_vec2->Px() << " py "<< met_vec2->Py() <<" pt "<< met_vec2->Mod() <<std::endl;
-    // std::cout <<" bjets input M_h= "<< htoBB_lorentz->M(); htoBB_lorentz->Print();
-    //wmass_gen = wmasspdf->GetRandom(50.0,90.0);
+    std::cout <<" heavyMassEstimator metCorrection b1 "<< b1rescalefactor_ << " b2 "<< b2rescalefactor_ << std::endl;
+    std::cout <<"b1jet Px "<<hme_b1jet_lorentz_.Px() <<" Py "<<hme_b1jet_lorentz_.Py() 
+	<<" b2jet Px "<< hme_b2jet_lorentz_.Px() <<" Py "<<hme_b2jet_lorentz_.Py() << std::endl;
+    std::cout <<"sum of two nu  px "<<nu1_lorentz_true_.Px()+nu2_lorentz_true_.Px() <<" py "<<nu1_lorentz_true_.Py()+nu2_lorentz_true_.Py()<<std::endl;
+    std::cout <<" heavyMassEstimator input met  px "<< hmemet_vec2_.Px() << " py "<<hmemet_vec2_.Py() <<" pt "<< hmemet_vec2_.Mod() <<std::endl;
+    std::cout <<" met after correction px "<< met_vec2_.Px() << " py "<< met_vec2_.Py() <<" pt "<< met_vec2_.Mod() <<std::endl;
+    // std::cout <<" bjets input M_h= "<< htoBB_lorentz_.M(); htoBB_lorentz_.Print();
+    //wmass_gen_ = wmasspdf->GetRandom(50.0,90.0);
     //test
-    //eta_gen = eta_nuonshellW_true;
-    //phi_gen = phi_nuonshellW_true;
-    //wmass_gen = mass_onshellW_true; 
-    std::cout << "true eta phi of nuonshell ("<<eta_nuonshellW_true <<","<<phi_nuonshellW_true<<"), pt " <<pt_nuonshellW_true 
-	<<" mass of onshellW " << mass_onshellW_true <<" wmass_gen "<< wmass_gen  << std::endl;
-	std::cout << "true eta phi of nuoffshell ("<<eta_nuoffshellW_true <<","<<phi_nuoffshellW_true<<"), pt " <<pt_nuoffshellW_true 
-	<<" mass of offshellW " << mass_offshellW_true <<  std::endl;
+    //eta_gen_ = eta_nuonshellW_true_;
+    //phi_gen_ = phi_nuonshellW_true_;
+    //wmass_gen_ = mass_onshellW_true_; 
+    std::cout << "true eta phi of nuonshell ("<<eta_nuonshellW_true_ <<","<<phi_nuonshellW_true_<<"), pt " <<pt_nuonshellW_true_ 
+	<<" mass of onshellW " << mass_onshellW_true_ <<" wmass_gen "<< wmass_gen_  << std::endl;
+	std::cout << "true eta phi of nuoffshell ("<<eta_nuoffshellW_true_ <<","<<phi_nuoffshellW_true_<<"), pt " <<pt_nuoffshellW_true_ 
+	<<" mass of offshellW " << mass_offshellW_true_ <<  std::endl;
      */
-    //std::cout <<" eta_gen "<< eta_gen << " phi_gen " << phi_gen << " wmass "<<wmass_gen << std::endl;
+    //std::cout <<" eta_gen "<< eta_gen_ << " phi_gen " << phi_gen_ << " wmass "<<wmass_gen_ << std::endl;
     int solutions = 0;//count num of soluble case
     bool solution[4]={false, false, false, false}; //record whether the case is soluble or not
     for (int j = 0; j < 4; j++){
 	assignMuLorentzVec(j/2);
-	nu_onshellW_pt = nu1pt_onshellW(std::make_pair(eta_gen, phi_gen), mu_onshellW_lorentz, wmass_gen); 
-	nu_onshellW_lorentz->SetPtEtaPhiM(nu_onshellW_pt, eta_gen, phi_gen,0);
-	//solution[j] = nulorentz_offshellW(jets_lorentz, mu_onshellW_lorentz,
-	//std::cout << " calculate nu1_pt " << nu_onshellW_pt << " px " << nu_onshellW_lorentz->Px() <<" py "<< nu_onshellW_lorentz->Py() << std::endl;
+	nu_onshellW_pt = nu1pt_onshellW(std::make_pair(eta_gen_, phi_gen_), mu_onshellW_lorentz_, wmass_gen_); 
+	nu_onshellW_lorentz_.SetPtEtaPhiM(nu_onshellW_pt, eta_gen_, phi_gen_,0);
+	//solution[j] = nulorentz_offshellW(jets_lorentz_, mu_onshellW_lorentz_,
+	//std::cout << " calculate nu1_pt " << nu_onshellW_pt << " px " << nu_onshellW_lorentz_.Px() <<" py "<< nu_onshellW_lorentz_.Py() << std::endl;
 	if (useMET_)
-	  solution[j] = nulorentz_offshellW(met_vec2, mu_onshellW_lorentz,
-		mu_offshellW_lorentz, nu_onshellW_lorentz,
-		nu_offshellW_lorentz, j%2, hmass_gen);
+	  solution[j] = nulorentz_offshellW(met_vec2_, mu_onshellW_lorentz_,
+		mu_offshellW_lorentz_, nu_onshellW_lorentz_,
+		nu_offshellW_lorentz_, j%2, hmass_gen_);
 	else
-	  solution[j] = nulorentz_offshellW(hme_totjets_lorentz, mu_onshellW_lorentz,
-		mu_offshellW_lorentz, nu_onshellW_lorentz,
-		nu_offshellW_lorentz, j%2, hmass_gen);
+	  solution[j] = nulorentz_offshellW(hme_totjets_lorentz_, mu_onshellW_lorentz_,
+		mu_offshellW_lorentz_, nu_onshellW_lorentz_,
+		nu_offshellW_lorentz_, j%2, hmass_gen_);
 
-
-
-	//std::cout << j << " nu_offshellW_eta " << nu_offshellW_lorentz->Eta()<<" phi " << nu_offshellW_lorentz->Phi() << std::endl; 
+	//std::cout << j << " nu_offshellW_eta " << nu_offshellW_lorentz_.Eta()<<" phi " << nu_offshellW_lorentz_.Phi() << std::endl; 
 	if (solution[j]) solutions++;
     }
-    //       nu_offshellW_lorentz= NULL; 
+    //       nu_offshellW_lorentz_= NULL; 
     for (int j = 0; j < 4; j++){
-	//  int fill = hmetree->Fill();
+	//if ( writehmetree_ ) hmetree_->Fill();
 	if (!solution[j])  continue;
 	// reassign muons LorentzVector
-	if (simulation){
+	if (simulation_){
 	  TLorentzVector tmpnu12;
-	  tmpnu12.SetXYZM(met_vec2->Px(),met_vec2->Py(),nu1_lorentz_true->Pz()+nu2_lorentz_true->Pz(),0);
-	  h2tohh_expect_lorentz = *mu_onshellW_lorentz+*mu_offshellW_lorentz+*htoBB_lorentz+tmpnu12;
-	  mass_h2_expect = h2tohh_expect_lorentz.M();
+	  tmpnu12.SetXYZM(met_vec2_.Px(),met_vec2_.Py(),nu1_lorentz_true_.Pz()+nu2_lorentz_true_.Pz(),0);
+	  h2tohh_expect_lorentz_ = mu_onshellW_lorentz_ + mu_offshellW_lorentz_ + htoBB_lorentz_ + tmpnu12;
+	  mass_h2_expect_ = h2tohh_expect_lorentz_.M();
 	}
 
-	control = j;
+	control_ = j;
 	assignMuLorentzVec(j/2);
-	nu_onshellW_pt = nu1pt_onshellW(std::make_pair(eta_gen, phi_gen), mu_onshellW_lorentz, wmass_gen); 
-	nu_onshellW_lorentz->SetPtEtaPhiM(nu_onshellW_pt, eta_gen, phi_gen,0);
-	//nulorentz_offshellW(jets_lorentz, mu_onshellW_lorentz,
+	nu_onshellW_pt = nu1pt_onshellW(std::make_pair(eta_gen_, phi_gen_), mu_onshellW_lorentz_, wmass_gen_); 
+	nu_onshellW_lorentz_.SetPtEtaPhiM(nu_onshellW_pt, eta_gen_, phi_gen_,0);
+	//nulorentz_offshellW(jets_lorentz_, mu_onshellW_lorentz_,
 	if (useMET_)
-	  nulorentz_offshellW(met_vec2, mu_onshellW_lorentz,
-		mu_offshellW_lorentz, nu_onshellW_lorentz,
-		nu_offshellW_lorentz, j%2, hmass_gen);
+	  nulorentz_offshellW(met_vec2_, mu_onshellW_lorentz_,
+		mu_offshellW_lorentz_, nu_onshellW_lorentz_,
+		nu_offshellW_lorentz_, j%2, hmass_gen_);
 	else
-	  nulorentz_offshellW(hme_totjets_lorentz, mu_onshellW_lorentz,
-		mu_offshellW_lorentz, nu_onshellW_lorentz,
-		nu_offshellW_lorentz, j%2, hmass_gen);
+	  nulorentz_offshellW(hme_totjets_lorentz_, mu_onshellW_lorentz_,
+		mu_offshellW_lorentz_, nu_onshellW_lorentz_,
+		nu_offshellW_lorentz_, j%2, hmass_gen_);
 
-	weight = 1.0/solutions;// change weight if we consider possibility factor  like matrix elements
-	mu_onshellW_Eta = mu_onshellW_lorentz->Eta();
-	mu_onshellW_Phi = mu_onshellW_lorentz->Phi();
-	mu_onshellW_Pt = mu_onshellW_lorentz->Pt();
-	mu_onshellW_E = mu_onshellW_lorentz->E();
+	weight_ = 1.0/solutions;// change weight if we consider possibility factor  like matrix elements
+	mu_onshellW_Eta_ = mu_onshellW_lorentz_.Eta();
+	mu_onshellW_Phi_ = mu_onshellW_lorentz_.Phi();
+	mu_onshellW_Pt_ = mu_onshellW_lorentz_.Pt();
+	mu_onshellW_E_ = mu_onshellW_lorentz_.E();
 
-	mu_offshellW_Eta = mu_offshellW_lorentz->Eta();
-	mu_offshellW_Phi = mu_offshellW_lorentz->Phi();
-	mu_offshellW_Pt = mu_offshellW_lorentz->Pt();
-	mu_offshellW_E = mu_offshellW_lorentz->E();
+	mu_offshellW_Eta_ = mu_offshellW_lorentz_.Eta();
+	mu_offshellW_Phi_ = mu_offshellW_lorentz_.Phi();
+	mu_offshellW_Pt_ = mu_offshellW_lorentz_.Pt();
+	mu_offshellW_E_ = mu_offshellW_lorentz_.E();
 
-	nu_onshellW_Eta = nu_onshellW_lorentz->Eta();
-	nu_onshellW_Phi = nu_onshellW_lorentz->Phi();
-	nu_onshellW_Pt = nu_onshellW_lorentz->Pt();
-	nu_onshellW_E = nu_onshellW_lorentz->E();
+	nu_onshellW_Eta_ = nu_onshellW_lorentz_.Eta();
+	nu_onshellW_Phi_ = nu_onshellW_lorentz_.Phi();
+	nu_onshellW_Pt_ = nu_onshellW_lorentz_.Pt();
+	nu_onshellW_E_ = nu_onshellW_lorentz_.E();
 
-	nu_offshellW_Eta = nu_offshellW_lorentz->Eta();
-	nu_offshellW_Phi = nu_offshellW_lorentz->Phi();
-	nu_offshellW_Pt = nu_offshellW_lorentz->Pt();
-	nu_offshellW_E = nu_offshellW_lorentz->E();
+	nu_offshellW_Eta_ = nu_offshellW_lorentz_.Eta();
+	nu_offshellW_Phi_ = nu_offshellW_lorentz_.Phi();
+	nu_offshellW_Pt_ = nu_offshellW_lorentz_.Pt();
+	nu_offshellW_E_ = nu_offshellW_lorentz_.E();
 
-	*onshellW_lorentz = *mu_onshellW_lorentz+*nu_onshellW_lorentz;
-	*offshellW_lorentz = *mu_offshellW_lorentz+*nu_offshellW_lorentz;
-	*htoWW_lorentz = *onshellW_lorentz+*offshellW_lorentz;
-	*h2tohh_lorentz = *htoWW_lorentz+*htoBB_lorentz;
-	if (h2tohh_lorentz->M()<245 or h2tohh_lorentz->M()>3800) {
-                 if (verbose > 0) {
-			std::cerr <<" heavyMassEstimator h2 mass is too small, or too large,  M_h " <<h2tohh_lorentz->M() << std::endl;
-			std::cerr <<" gen nu eta "<< eta_gen <<" nu phi "<< phi_gen << std::endl;
-			std::cerr <<" from heavyMassEstimator mu_onshell (px,py,pz, E)= ("<< mu_onshellW_lorentz->Px()<<", "<<  mu_onshellW_lorentz->Py()<<", "<< mu_onshellW_lorentz->Pz()<<", "<< mu_onshellW_lorentz->E() <<")"<< std::endl;
-			std::cerr <<" from heavyMassEstimator mu_offshell (px,py,pz, E)= ("<< mu_offshellW_lorentz->Px()<<", "<<  mu_offshellW_lorentz->Py()<<", "<< mu_offshellW_lorentz->Pz()<<", "<< mu_offshellW_lorentz->E() <<")"<< std::endl;
-			std::cerr <<" from heavyMassEstimator nu_onshell (px,py,pz, E)= ("<< nu_onshellW_lorentz->Px()<<", "<<  nu_onshellW_lorentz->Py()<<", "<< nu_onshellW_lorentz->Pz()<<", "<< nu_onshellW_lorentz->E() <<")"<< std::endl;
-			std::cerr <<" from heavyMassEstimator nu_offshell (px,py,pz, E)= ("<< nu_offshellW_lorentz->Px()<<", "<<  nu_offshellW_lorentz->Py()<<", "<< nu_offshellW_lorentz->Pz()<<", "<< nu_offshellW_lorentz->E() <<")"<< std::endl;
-			std::cerr <<" from heavyMassEstimator htoBB, mass "<< htoBB_lorentz->M()<<"(px,py,pz, E)= ("<<htoBB_lorentz->Px()<<", "<< htoBB_lorentz->Py() <<", "<< htoBB_lorentz->Pz() <<", "<< htoBB_lorentz->E()<<")" <<std::endl;
+	onshellW_lorentz_ = mu_onshellW_lorentz_ + nu_onshellW_lorentz_;
+	offshellW_lorentz_ = mu_offshellW_lorentz_ + nu_offshellW_lorentz_;
+	htoWW_lorentz_ = onshellW_lorentz_ + offshellW_lorentz_;
+	h2tohh_lorentz_ = htoWW_lorentz_ + htoBB_lorentz_;
+	if (h2tohh_lorentz_.M()<245 or h2tohh_lorentz_.M()>3800) {
+                 if (verbose_ > 0) {
+			std::cerr <<" heavyMassEstimator h2 mass is too small, or too large,  M_h " <<h2tohh_lorentz_.M() << std::endl;
+			std::cerr <<" gen nu eta "<< eta_gen_ <<" nu phi "<< phi_gen_ << std::endl;
+			std::cerr <<" from heavyMassEstimator mu_onshell (px,py,pz, E)= ("<< mu_onshellW_lorentz_.Px()<<", "<<  mu_onshellW_lorentz_.Py()<<", "<< mu_onshellW_lorentz_.Pz()<<", "<< mu_onshellW_lorentz_.E() <<")"<< std::endl;
+			std::cerr <<" from heavyMassEstimator mu_offshell (px,py,pz, E)= ("<< mu_offshellW_lorentz_.Px()<<", "<<  mu_offshellW_lorentz_.Py()<<", "<< mu_offshellW_lorentz_.Pz()<<", "<< mu_offshellW_lorentz_.E() <<")"<< std::endl;
+			std::cerr <<" from heavyMassEstimator nu_onshell (px,py,pz, E)= ("<< nu_onshellW_lorentz_.Px()<<", "<<  nu_onshellW_lorentz_.Py()<<", "<< nu_onshellW_lorentz_.Pz()<<", "<< nu_onshellW_lorentz_.E() <<")"<< std::endl;
+			std::cerr <<" from heavyMassEstimator nu_offshell (px,py,pz, E)= ("<< nu_offshellW_lorentz_.Px()<<", "<<  nu_offshellW_lorentz_.Py()<<", "<< nu_offshellW_lorentz_.Pz()<<", "<< nu_offshellW_lorentz_.E() <<")"<< std::endl;
+			std::cerr <<" from heavyMassEstimator htoBB, mass "<< htoBB_lorentz_.M()<<"(px,py,pz, E)= ("<<htoBB_lorentz_.Px()<<", "<< htoBB_lorentz_.Py() <<", "<< htoBB_lorentz_.Pz() <<", "<< htoBB_lorentz_.E()<<")" <<std::endl;
                  }
-                if (simulation && verbose > 0) {
+                if (simulation_ && verbose_ > 0) {
     			std::cerr <<"following is pure gen level infromation " << std::endl;
-    			std::cerr <<" nu1 px "<<nu1_lorentz_true->Px() << " py " <<nu1_lorentz_true->Py() << " pt "<< nu1_lorentz_true->Pt() 
-			<< " eta "<<nu1_lorentz_true->Eta() << " phi "<< nu1_lorentz_true->Phi() << std::endl;
-    			std::cerr <<" nu2 px "<<nu2_lorentz_true->Px() << " py " <<nu2_lorentz_true->Py() << " pt "<< nu2_lorentz_true->Pt() 
-			<< " eta "<<nu2_lorentz_true->Eta() << " phi "<< nu2_lorentz_true->Phi() << std::endl;
-    			std::cerr <<" onshellW mass "<< onshellW_lorentz_true->M(); onshellW_lorentz_true->Print();  
-    			std::cerr <<"offshellW mass " <<offshellW_lorentz_true->M(); offshellW_lorentz_true->Print();  
-    			std::cerr <<" htoWW mass "<< htoWW_lorentz_true->M(); htoWW_lorentz_true->Print();
-    			std::cerr <<" htoBB mass "<< htoBB_lorentz_true->M(); htoBB_lorentz_true->Print();
-    			std::cerr <<" h2tohh, pz " <<h2tohh_lorentz_true->Pz() << " Mass " << h2tohh_lorentz_true->M() << std::endl;
+    			std::cerr <<" nu1 px "<<nu1_lorentz_true_.Px() << " py " <<nu1_lorentz_true_.Py() << " pt "<< nu1_lorentz_true_.Pt() 
+			<< " eta "<<nu1_lorentz_true_.Eta() << " phi "<< nu1_lorentz_true_.Phi() << std::endl;
+    			std::cerr <<" nu2 px "<<nu2_lorentz_true_.Px() << " py " <<nu2_lorentz_true_.Py() << " pt "<< nu2_lorentz_true_.Pt() 
+			<< " eta "<<nu2_lorentz_true_.Eta() << " phi "<< nu2_lorentz_true_.Phi() << std::endl;
+    			std::cerr <<" onshellW mass "<< onshellW_lorentz_true_.M(); onshellW_lorentz_true_.Print();  
+    			std::cerr <<"offshellW mass " <<offshellW_lorentz_true_.M(); offshellW_lorentz_true_.Print();  
+    			std::cerr <<" htoWW mass "<< htoWW_lorentz_true_.M(); htoWW_lorentz_true_.Print();
+    			std::cerr <<" htoBB mass "<< htoBB_lorentz_true_.M(); htoBB_lorentz_true_.Print();
+    			std::cerr <<" h2tohh, pz " <<h2tohh_lorentz_true_.Pz() << " Mass " << h2tohh_lorentz_true_.M() << std::endl;
    		}	
 		
 		continue;
 	}
-	//*h2tohh_lorentz = *htoWW_lorentz+*htoBB_lorentz_true;
+	//*h2tohh_lorentz_ = *htoWW_lorentz_+*htoBB_lorentz_true_;
 
-	//*met_vec2 = TVector2(nu_onshellW_lorentz->Px()+nu_offshellW_lorentz->Px(),
-	//				nu_onshellW_lorentz->Py()+nu_offshellW_lorentz->Py());
-        if (fabs(hmass_gen-htoWW_lorentz->M()) > 2 && verbose > 0) {
-	  std::cout << "  hmass_gen " << hmass_gen << " Higgs mass from heavyMassEstimator " << htoWW_lorentz->M() <<std::endl;
-          //verbose = 4;
+	//*met_vec2_ = TVector2(nu_onshellW_lorentz_.Px()+nu_offshellW_lorentz_.Px(),
+	//				nu_onshellW_lorentz_.Py()+nu_offshellW_lorentz_.Py());
+        if (fabs(hmass_gen_-htoWW_lorentz_.M()) > 2 && verbose_ > 0) {
+	  std::cout << "  hmass_gen " << hmass_gen_ << " Higgs mass from heavyMassEstimator " << htoWW_lorentz_.M() <<std::endl;
+          //verbose_ = 4;
 	}
 
-	if (verbose > 3){
-	  std::cout << " onshell W mass "<< onshellW_lorentz->M();   onshellW_lorentz->Print();
-	  std::cout << " offshell W mass "<< offshellW_lorentz->M(); offshellW_lorentz->Print();
-	  std::cout << " htoWW mass "<< htoWW_lorentz->M(); htoWW_lorentz->Print();
-	  //std::cout << " htoBB mass "<< htoBB_lorentz->M(); htoBB_lorentz->Print();
-	  std::cout << " htoBB mass "<< htoBB_lorentz_true->M(); htoBB_lorentz_true->Print();
-          //verbose = 0;
+	if (verbose_ > 3){
+	  std::cout << " onshell W mass "<< onshellW_lorentz_.M();   onshellW_lorentz_.Print();
+	  std::cout << " offshell W mass "<< offshellW_lorentz_.M(); offshellW_lorentz_.Print();
+	  std::cout << " htoWW mass "<< htoWW_lorentz_.M(); htoWW_lorentz_.Print();
+	  //std::cout << " htoBB mass "<< htoBB_lorentz_.M(); htoBB_lorentz_.Print();
+	  std::cout << " htoBB mass "<< htoBB_lorentz_true_.M(); htoBB_lorentz_true_.Print();
+          //verbose_ = 0;
 	}
-	if (verbose > 3 && (h2tohh_lorentz->Pt()/h2tohh_lorentz->E())>0.0000001) {
-	  std::cout << " h2tohh mass "<< h2tohh_lorentz->M() <<" pt " << h2tohh_lorentz->Pt();
-	  h2tohh_lorentz->Print();
+	if (verbose_ > 3 && (h2tohh_lorentz_.Pt()/h2tohh_lorentz_.E())>0.0000001) {
+	  std::cout << " h2tohh mass "<< h2tohh_lorentz_.M() <<" pt " << h2tohh_lorentz_.Pt();
+	  h2tohh_lorentz_.Print();
 	}
-	onshellW_Eta = onshellW_lorentz->Eta();
-	onshellW_Phi = onshellW_lorentz->Phi();
-	onshellW_Pt = onshellW_lorentz->Pt();
-	onshellW_E = onshellW_lorentz->E();
-	onshellW_Mass = onshellW_lorentz->M();
-	offshellW_Eta = offshellW_lorentz->Eta();
-	offshellW_Phi = offshellW_lorentz->Phi();
-	offshellW_Pt = offshellW_lorentz->Pt();
-	offshellW_E = offshellW_lorentz->E();
-	offshellW_Mass = offshellW_lorentz->M();
-	htoWW_Eta = htoWW_lorentz->Eta();
-	htoWW_Phi = htoWW_lorentz->Phi();
-	htoWW_Pt = htoWW_lorentz->Pt();
-	htoWW_E = htoWW_lorentz->E();
-	htoWW_Mass = htoWW_lorentz->M();
-	htoBB_jets_Eta = htoBB_lorentz->Eta();
-	htoBB_jets_Phi = htoBB_lorentz->Phi();
-	htoBB_jets_Pt = htoBB_lorentz->Pt();
-	htoBB_jets_E = htoBB_lorentz->E();
-	htoBB_jets_Mass = htoBB_lorentz->M();
-	h2tohh_Pt = h2tohh_lorentz->Pt();
-	h2tohh_E = h2tohh_lorentz->E();
-	h2tohh_Mass = h2tohh_lorentz->M();
-	heavyMassEstimatormet_Px = met_vec2->Px();
-	heavyMassEstimatormet_Py = met_vec2->Py();
-	heavyMassEstimatormet_E = met_vec2->Mod();
-	heavyMassEstimatormet_Phi = met_vec2->Phi();
+	onshellW_Eta_ = onshellW_lorentz_.Eta();
+	onshellW_Phi_ = onshellW_lorentz_.Phi();
+	onshellW_Pt_ = onshellW_lorentz_.Pt();
+	onshellW_E_ = onshellW_lorentz_.E();
+	onshellW_Mass_ = onshellW_lorentz_.M();
+	offshellW_Eta_ = offshellW_lorentz_.Eta();
+	offshellW_Phi_ = offshellW_lorentz_.Phi();
+	offshellW_Pt_ = offshellW_lorentz_.Pt();
+	offshellW_E_ = offshellW_lorentz_.E();
+	offshellW_Mass_ = offshellW_lorentz_.M();
+	htoWW_Eta_ = htoWW_lorentz_.Eta();
+	htoWW_Phi_ = htoWW_lorentz_.Phi();
+	htoWW_Pt_ = htoWW_lorentz_.Pt();
+	htoWW_E_ = htoWW_lorentz_.E();
+	htoWW_Mass_ = htoWW_lorentz_.M();
+	htoBB_jets_Eta_ = htoBB_lorentz_.Eta();
+	htoBB_jets_Phi_ = htoBB_lorentz_.Phi();
+	htoBB_jets_Pt_ = htoBB_lorentz_.Pt();
+	htoBB_jets_E_ = htoBB_lorentz_.E();
+	htoBB_jets_Mass_ = htoBB_lorentz_.M();
+	h2tohh_Pt_ = h2tohh_lorentz_.Pt();
+	h2tohh_E_ = h2tohh_lorentz_.E();
+	h2tohh_Mass_ = h2tohh_lorentz_.M();
+	heavyMassEstimatormet_Px_ = met_vec2_.Px();
+	heavyMassEstimatormet_Py_ = met_vec2_.Py();
+	heavyMassEstimatormet_E_ = met_vec2_.Mod();
+	heavyMassEstimatormet_Phi_ = met_vec2_.Phi();
 
-	if (weightfromonshellnupt_func_) weight1 = weightfromonshellnupt(nu_onshellW_pt); 
-	if (weightfromonshellnupt_hist_) weight1 = weightfromhist(onshellnupt_hist, nu_onshellW_pt); 
-	if (weightfromonoffshellWmass_hist_) weight2 = weightfromhist(onoffshellWmass_hist, wmass_gen, offshellW_lorentz->M()); 
-	if (weightfromonoffshellWmass_hist_) weight3 = weightfromhist(onoffshellWmass_hist, wmass_gen, offshellW_lorentz->M(), false);
-	if (weightfrombjetrescalec1c2_hist_) weight4 = weightfromhist(bjetrescalec2_hist, rescalec2);
-	weight1 = weight1*weight;
-	weight2 = weight2*weight1;
-	weight3 = weight1*weight3;
-	weight4 = weight4*weight1;
-	if ((h2tohh_lorentz->Pt()/h2tohh_lorentz->E())>0.0000001){
-	  h2tohh_Eta = h2tohh_lorentz->Eta();
-	  h2tohh_Phi = h2tohh_lorentz->Phi();
+	if (weightfromonshellnupt_func_) weight1_ = weightfromonshellnupt(nu_onshellW_pt); 
+	if (weightfromonshellnupt_hist_) weight1_ = weightfromhist(onshellnupt_hist_, nu_onshellW_pt); 
+	if (weightfromonoffshellWmass_hist_) weight2_ = weightfromhist(onoffshellWmass_hist_, wmass_gen_, offshellW_lorentz_.M()); 
+	if (weightfromonoffshellWmass_hist_) weight3_ = weightfromhist(onoffshellWmass_hist_, wmass_gen_, offshellW_lorentz_.M(), false);
+	if (weightfrombjetrescalec1c2_hist_) weight4_ = weightfromhist(bjetrescalec2_hist_, rescalec2_);
+	weight1_ = weight1_*weight_;
+	weight2_ = weight2_*weight1_;
+	weight3_ = weight1_*weight3_;
+	weight4_ = weight4_*weight1_;
+	if ((h2tohh_lorentz_.Pt()/h2tohh_lorentz_.E())>0.0000001){
+	  h2tohh_Eta_ = h2tohh_lorentz_.Eta();
+	  h2tohh_Phi_ = h2tohh_lorentz_.Phi();
 	}else {//pt =0, strange case here
-	  h2tohh_Eta = 1000000;
-	  h2tohh_Phi = 0;
+	  h2tohh_Eta_ = 1000000;
+	  h2tohh_Phi_ = 0;
 	}
 
-	//	printheavyMassEstimatorresult();
-	//       	hmetree->Fill();
-	if (weight1<=0.0) continue;
-	heavyMassEstimator_h2Mass.Fill(h2tohh_Mass, weight);
-	heavyMassEstimator_h2Massweight1.Fill(h2tohh_Mass, weight1);
-	heavyMassEstimator_h2Massweight4.Fill(h2tohh_Mass, weight4);
-	if (heavyMassEstimatordebug)  std::cout <<" h2tohh mass "<< h2tohh_Mass <<" weight " << weight <<" weight1 "<< weight1 <<" nu_onshellW_pt "<< nu_onshellW_pt << std::endl;
+	//printheavyMassEstimatorresult();
+	//if ( writehmetree_ ) hmetree_->Fill();
+	if (weight1_<=0.0) continue;
+	heavyMassEstimator_h2Mass_->Fill(h2tohh_Mass_, weight_);
+	heavyMassEstimator_h2Massweight1_->Fill(h2tohh_Mass_, weight1_);
+	heavyMassEstimator_h2Massweight4_->Fill(h2tohh_Mass_, weight4_);
+	if (heavyMassEstimatordebug_)  std::cout <<" h2tohh mass "<< h2tohh_Mass_ <<" weight " << weight_ <<" weight1 "<< weight1_ <<" nu_onshellW_pt "<< nu_onshellW_pt << std::endl;
         validrun =true;
     }//end controls loop,(0,1,2,3)
-    //hmetree->Fill();
+    //hmetree_->Fill();
   }//end of iteration
-  if (heavyMassEstimatordebug){
-      std::cout <<"initial heavyMassEstimator input met  px "<<hmemet_vec2->Px() << " py "<<hmemet_vec2->Py() <<" pt "<< hmemet_vec2->Mod() <<std::endl;
-      std::cout <<"last iteration heavyMassEstimator input met  px "<<met_vec2->Px() << " py "<<met_vec2->Py() <<" pt "<< met_vec2->Mod() <<std::endl;
+  if (heavyMassEstimatordebug_){
+      std::cout <<"initial heavyMassEstimator input met  px "<<hmemet_vec2_.Px() << " py "<<hmemet_vec2_.Py() <<" pt "<< hmemet_vec2_.Mod() <<std::endl;
+      std::cout <<"last iteration heavyMassEstimator input met  px "<<met_vec2_.Px() << " py "<<met_vec2_.Py() <<" pt "<< met_vec2_.Mod() <<std::endl;
       if (validrun) std::cout <<" true validrun "<< std::endl;
       else std::cout <<" false validrun "<< std::endl;
-      //std::cout <<"last iteration bjets input M_h= "<< htoBB_lorentz->M(); htoBB_lorentz->Print();
-      //std::cout <<"num of solutions " << heavyMassEstimator_h2Mass.GetEntries() << std::endl;
+      //std::cout <<"last iteration bjets input M_h= "<< htoBB_lorentz_.M(); htoBB_lorentz_.Print();
+      //std::cout <<"num of solutions " << heavyMassEstimator_h2Mass_->GetEntries() << std::endl;
       }
-  delete generator;
 
   //std::cout <<"gFile get name "<< gFile->GetName() <<" gFile get options " << gFile->GetOption() << std::endl;
-  file->Close();
+  //file_->Close();
   return validrun;
 }
 
@@ -529,255 +540,255 @@ heavyMassEstimator::initTree(TTree* hmetree){
   //initial branch value if necessary
   //
   //
-  weight1 = 1.0;
-  weight2 = 1.0;
-  weight3 = 1.0;
-  weight4 = 1.0;
+  weight1_ = 1.0;
+  weight2_ = 1.0;
+  weight3_ = 1.0;
+  weight4_ = 1.0;
 
-  if (simulation and onshellMarker == 1){
-    eta_nuoffshellW_true = nu2_lorentz_true->Eta();
-    phi_nuoffshellW_true = nu2_lorentz_true->Phi();
-    pt_nuoffshellW_true = nu2_lorentz_true->Pt();
-    px_nuoffshellW_true = nu2_lorentz_true->Px();
-    py_nuoffshellW_true = nu2_lorentz_true->Py();
-    eta_nuonshellW_true = nu1_lorentz_true->Eta();
-    phi_nuonshellW_true = nu1_lorentz_true->Phi();
-    pt_nuonshellW_true = nu1_lorentz_true->Pt();
-    px_nuonshellW_true = nu1_lorentz_true->Px();
-    py_nuonshellW_true = nu1_lorentz_true->Py();
+  if (simulation_ && onshellMarker_ == 1){
+    eta_nuoffshellW_true_ = nu2_lorentz_true_.Eta();
+    phi_nuoffshellW_true_ = nu2_lorentz_true_.Phi();
+    pt_nuoffshellW_true_ = nu2_lorentz_true_.Pt();
+    px_nuoffshellW_true_ = nu2_lorentz_true_.Px();
+    py_nuoffshellW_true_ = nu2_lorentz_true_.Py();
+    eta_nuonshellW_true_ = nu1_lorentz_true_.Eta();
+    phi_nuonshellW_true_ = nu1_lorentz_true_.Phi();
+    pt_nuonshellW_true_ = nu1_lorentz_true_.Pt();
+    px_nuonshellW_true_ = nu1_lorentz_true_.Px();
+    py_nuonshellW_true_ = nu1_lorentz_true_.Py();
   }
-  else if (simulation and onshellMarker == 2){
-    eta_nuoffshellW_true = nu1_lorentz_true->Eta();
-    phi_nuoffshellW_true = nu1_lorentz_true->Phi();
-    pt_nuoffshellW_true = nu1_lorentz_true->Pt();
-    px_nuoffshellW_true = nu1_lorentz_true->Px();
-    py_nuoffshellW_true = nu1_lorentz_true->Py();
-    eta_nuonshellW_true = nu2_lorentz_true->Eta();
-    phi_nuonshellW_true = nu2_lorentz_true->Phi();
-    pt_nuonshellW_true = nu2_lorentz_true->Pt();
-    px_nuonshellW_true = nu2_lorentz_true->Px();
-    py_nuonshellW_true = nu2_lorentz_true->Py();
+  else if (simulation_ && onshellMarker_ == 2){
+    eta_nuoffshellW_true_ = nu1_lorentz_true_.Eta();
+    phi_nuoffshellW_true_ = nu1_lorentz_true_.Phi();
+    pt_nuoffshellW_true_ = nu1_lorentz_true_.Pt();
+    px_nuoffshellW_true_ = nu1_lorentz_true_.Px();
+    py_nuoffshellW_true_ = nu1_lorentz_true_.Py();
+    eta_nuonshellW_true_ = nu2_lorentz_true_.Eta();
+    phi_nuonshellW_true_ = nu2_lorentz_true_.Phi();
+    pt_nuonshellW_true_ = nu2_lorentz_true_.Pt();
+    px_nuonshellW_true_ = nu2_lorentz_true_.Px();
+    py_nuonshellW_true_ = nu2_lorentz_true_.Py();
   }
 
-  if (simulation){ 
-    htoBB_Eta = htoBB_lorentz_true->Eta();
-    htoBB_Phi = htoBB_lorentz_true->Phi();
-    htoBB_Pt = htoBB_lorentz_true->Pt();
-    htoBB_E = htoBB_lorentz_true->E();
-    htoBB_Mass = htoBB_lorentz_true->M();
-    b1_Eta = b1_lorentz->Eta();
-    b1_Phi = b1_lorentz->Phi();
-    b1_Pt = b1_lorentz->Pt();
-    b1_Px = b1_lorentz->Px();
-    b1_Py = b1_lorentz->Py();
-    b1_E = b1_lorentz->E();
-    b1_Mass = b1_lorentz->M();
-    b2_Eta = b2_lorentz->Eta();
-    b2_Phi = b2_lorentz->Phi();
-    b2_Pt = b2_lorentz->Pt();
-    b2_Px = b2_lorentz->Px();
-    b2_Py = b2_lorentz->Py();
-    b2_E = b2_lorentz->E();
-    b2_Mass = b2_lorentz->M();
+  if (simulation_){ 
+    htoBB_Eta_ = htoBB_lorentz_true_.Eta();
+    htoBB_Phi_ = htoBB_lorentz_true_.Phi();
+    htoBB_Pt_ = htoBB_lorentz_true_.Pt();
+    htoBB_E_ = htoBB_lorentz_true_.E();
+    htoBB_Mass_ = htoBB_lorentz_true_.M();
+    b1_Eta_ = b1_lorentz_.Eta();
+    b1_Phi_ = b1_lorentz_.Phi();
+    b1_Pt_ = b1_lorentz_.Pt();
+    b1_Px_ = b1_lorentz_.Px();
+    b1_Py_ = b1_lorentz_.Py();
+    b1_E_ = b1_lorentz_.E();
+    b1_Mass_ = b1_lorentz_.M();
+    b2_Eta_ = b2_lorentz_.Eta();
+    b2_Phi_ = b2_lorentz_.Phi();
+    b2_Pt_ = b2_lorentz_.Pt();
+    b2_Px_ = b2_lorentz_.Px();
+    b2_Py_ = b2_lorentz_.Py();
+    b2_E_ = b2_lorentz_.E();
+    b2_Mass_ = b2_lorentz_.M();
 
-    mass_offshellW_true = offshellW_lorentz_true->M();
-    mass_onshellW_true = onshellW_lorentz_true->M();
-    mass_htoWW_true = htoWW_lorentz_true->M();
-    pt_h2tohh_true = h2tohh_lorentz_true->Pt();
-    mass_h2tohh_true = h2tohh_lorentz_true->M();
-    ideal_met_Px = ideal_met_lorentz.Px();
-    ideal_met_Py = ideal_met_lorentz.Py();
-    ideal_met_E = ideal_met_lorentz.Energy();
+    mass_offshellW_true_ = offshellW_lorentz_true_.M();
+    mass_onshellW_true_ = onshellW_lorentz_true_.M();
+    mass_htoWW_true_ = htoWW_lorentz_true_.M();
+    pt_h2tohh_true_ = h2tohh_lorentz_true_.Pt();
+    mass_h2tohh_true_ = h2tohh_lorentz_true_.M();
+    ideal_met_Px_ = ideal_met_lorentz_.Px();
+    ideal_met_Py_ = ideal_met_lorentz_.Py();
+    ideal_met_E_ = ideal_met_lorentz_.Energy();
   }
   else {
-    eta_nuoffshellW_true = -1;
-    phi_nuoffshellW_true = -1;
-    pt_nuoffshellW_true = -1;
-    eta_nuonshellW_true = -1;
-    phi_nuonshellW_true = -1;
-    pt_nuonshellW_true = -1;
+    eta_nuoffshellW_true_ = -1;
+    phi_nuoffshellW_true_ = -1;
+    pt_nuoffshellW_true_ = -1;
+    eta_nuonshellW_true_ = -1;
+    phi_nuonshellW_true_ = -1;
+    pt_nuonshellW_true_ = -1;
 
-    mass_offshellW_true = -1;
-    mass_onshellW_true = -1;
-    mass_htoWW_true = -1;
-    pt_h2tohh_true = -1;
-    mass_h2tohh_true = -1;
+    mass_offshellW_true_ = -1;
+    mass_onshellW_true_ = -1;
+    mass_htoWW_true_ = -1;
+    pt_h2tohh_true_ = -1;
+    mass_h2tohh_true_ = -1;
 
 
 
   }
-  b1jet_Eta = hme_b1jet_lorentz->Eta();
-  b1jet_Phi = hme_b1jet_lorentz->Phi();
-  b1jet_Pt = hme_b1jet_lorentz->Pt();
-  b1jet_Px = hme_b1jet_lorentz->Px();
-  b1jet_Py = hme_b1jet_lorentz->Py();
-  b1jet_Energy = hme_b1jet_lorentz->Energy();
-  b1jet_Mass = hme_b1jet_lorentz->M();
-  b2jet_Eta = hme_b2jet_lorentz->Eta();
-  b2jet_Phi = hme_b2jet_lorentz->Phi();
-  b2jet_Pt = hme_b2jet_lorentz->Pt();
-  b2jet_Px = hme_b2jet_lorentz->Px();
-  b2jet_Py = hme_b2jet_lorentz->Py();
-  b2jet_Energy = hme_b2jet_lorentz->Energy();
-  b2jet_Mass = hme_b2jet_lorentz->M();
+  b1jet_Eta_ = hme_b1jet_lorentz_.Eta();
+  b1jet_Phi_ = hme_b1jet_lorentz_.Phi();
+  b1jet_Pt_ = hme_b1jet_lorentz_.Pt();
+  b1jet_Px_ = hme_b1jet_lorentz_.Px();
+  b1jet_Py_ = hme_b1jet_lorentz_.Py();
+  b1jet_Energy_ = hme_b1jet_lorentz_.Energy();
+  b1jet_Mass_ = hme_b1jet_lorentz_.M();
+  b2jet_Eta_ = hme_b2jet_lorentz_.Eta();
+  b2jet_Phi_ = hme_b2jet_lorentz_.Phi();
+  b2jet_Pt_ = hme_b2jet_lorentz_.Pt();
+  b2jet_Px_ = hme_b2jet_lorentz_.Px();
+  b2jet_Py_ = hme_b2jet_lorentz_.Py();
+  b2jet_Energy_ = hme_b2jet_lorentz_.Energy();
+  b2jet_Mass_ = hme_b2jet_lorentz_.M();
 
-  if (simulation){
-    b1jet_dR = hme_b1jet_lorentz->DeltaR(*b1_lorentz);
-    b2jet_dR = hme_b2jet_lorentz->DeltaR(*b2_lorentz);
-    //b1jet_dR = deltaR(b1jet_Eta, b1jet_Phi, b1_lorentz->Eta(), b1_lorentz->Phi());
-    //b2jet_dR = deltaR(b2jet_Eta, b2jet_Phi, b2_lorentz->Eta(), b2_lorentz->Phi());
-    b1rescalefactor_true = b1_Pt/b1jet_Pt;
-    b2rescalefactor_true = b2_Pt/b2jet_Pt;
-    if (b1jet_Pt>b2jet_Pt){
-	rescalec1_true = b1rescalefactor_true;
-	rescalec2_true = b2rescalefactor_true;
+  if (simulation_){
+    b1jet_dR_ = hme_b1jet_lorentz_.DeltaR(b1_lorentz_);
+    b2jet_dR_ = hme_b2jet_lorentz_.DeltaR(b2_lorentz_);
+    //b1jet_dR_ = deltaR(b1jet_Eta_, b1jet_Phi_, b1_lorentz_.Eta(), b1_lorentz_.Phi());
+    //b2jet_dR_ = deltaR(b2jet_Eta_, b2jet_Phi_, b2_lorentz_.Eta(), b2_lorentz_.Phi());
+    b1rescalefactor_true_ = b1_Pt_/b1jet_Pt_;
+    b2rescalefactor_true_ = b2_Pt_/b2jet_Pt_;
+    if (b1jet_Pt_>b2jet_Pt_){
+	rescalec1_true_ = b1rescalefactor_true_;
+	rescalec2_true_ = b2rescalefactor_true_;
     }
     else {
-	rescalec1_true = b2rescalefactor_true;
-	rescalec2_true = b1rescalefactor_true;
+	rescalec1_true_ = b2rescalefactor_true_;
+	rescalec2_true_ = b1rescalefactor_true_;
     }
   }
-  met = hmemet_vec2->Mod(); 
-  met_px = hmemet_vec2->Px();
-  met_py = hmemet_vec2->Py();
-  met_phi = hmemet_vec2->Phi();
+  met_ = hmemet_vec2_.Mod(); 
+  met_px_ = hmemet_vec2_.Px();
+  met_py_ = hmemet_vec2_.Py();
+  met_phi_ = hmemet_vec2_.Phi();
 
-  hmetree->Branch("ievent", &iev);
-  hmetree->Branch("eta_mean", &eta_mean);
-  hmetree->Branch("eta_rms", &eta_rms);
-  hmetree->Branch("eta_gen",&eta_gen);
-  hmetree->Branch("phi_gen",&phi_gen);
-  hmetree->Branch("wmass_gen",&wmass_gen);
-  hmetree->Branch("hmass_gen",&hmass_gen);
+  hmetree->Branch("ievent", &iev_);
+  hmetree->Branch("eta_mean", &eta_mean_);
+  hmetree->Branch("eta_rms", &eta_rms_);
+  hmetree->Branch("eta_gen",&eta_gen_);
+  hmetree->Branch("phi_gen",&phi_gen_);
+  hmetree->Branch("wmass_gen",&wmass_gen_);
+  hmetree->Branch("hmass_gen",&hmass_gen_);
 
-  hmetree->Branch("mu_onshellW_eta", &mu_onshellW_Eta);
-  hmetree->Branch("mu_onshellW_phi", &mu_onshellW_Phi);
-  hmetree->Branch("mu_onshellW_pt", &mu_onshellW_Pt);
-  hmetree->Branch("mu_onshellW_E", &mu_onshellW_E);
-  hmetree->Branch("mu_offshellW_eta", &mu_offshellW_Eta);
-  hmetree->Branch("mu_offshellW_phi", &mu_offshellW_Phi);
-  hmetree->Branch("mu_offshellW_pt", &mu_offshellW_Pt);
-  hmetree->Branch("mu_offshellW_E", &mu_offshellW_E);
-  hmetree->Branch("nu_onshellW_eta", &nu_onshellW_Eta);
-  hmetree->Branch("nu_onshellW_phi", &nu_onshellW_Phi);
-  hmetree->Branch("nu_onshellW_pt", &nu_onshellW_Pt);
-  hmetree->Branch("nu_onshellW_E", &nu_onshellW_E);
-  hmetree->Branch("nu_offshellW_eta", &nu_offshellW_Eta);
-  hmetree->Branch("nu_offshellW_phi", &nu_offshellW_Phi);
-  hmetree->Branch("nu_offshellW_pt", &nu_offshellW_Pt);
-  hmetree->Branch("nu_offshellW_E", &nu_offshellW_E);
-  hmetree->Branch("onshellW_eta", &onshellW_Eta);
-  hmetree->Branch("onshellW_phi", &onshellW_Phi);
-  hmetree->Branch("onshellW_pt", &onshellW_Pt);
-  hmetree->Branch("onshellW_E", &onshellW_E);
-  hmetree->Branch("onshellW_Mass", &onshellW_Mass);
-  hmetree->Branch("offshellW_eta", &offshellW_Eta);
-  hmetree->Branch("offshellW_phi", &offshellW_Phi);
-  hmetree->Branch("offshellW_pt", &offshellW_Pt);
-  hmetree->Branch("offshellW_E", &offshellW_E);
-  hmetree->Branch("offshellW_Mass", &offshellW_Mass);
-  hmetree->Branch("htoWW_Eta", &htoWW_Eta);
-  hmetree->Branch("htoWW_Phi", &htoWW_Phi);
-  hmetree->Branch("htoWW_Pt", &htoWW_Pt);
-  hmetree->Branch("htoWW_E", &htoWW_E);
-  hmetree->Branch("htoWW_Mass", &htoWW_Mass);
+  hmetree->Branch("mu_onshellW_eta", &mu_onshellW_Eta_);
+  hmetree->Branch("mu_onshellW_phi", &mu_onshellW_Phi_);
+  hmetree->Branch("mu_onshellW_pt", &mu_onshellW_Pt_);
+  hmetree->Branch("mu_onshellW_E", &mu_onshellW_E_);
+  hmetree->Branch("mu_offshellW_eta", &mu_offshellW_Eta_);
+  hmetree->Branch("mu_offshellW_phi", &mu_offshellW_Phi_);
+  hmetree->Branch("mu_offshellW_pt", &mu_offshellW_Pt_);
+  hmetree->Branch("mu_offshellW_E", &mu_offshellW_E_);
+  hmetree->Branch("nu_onshellW_eta", &nu_onshellW_Eta_);
+  hmetree->Branch("nu_onshellW_phi", &nu_onshellW_Phi_);
+  hmetree->Branch("nu_onshellW_pt", &nu_onshellW_Pt_);
+  hmetree->Branch("nu_onshellW_E", &nu_onshellW_E_);
+  hmetree->Branch("nu_offshellW_eta", &nu_offshellW_Eta_);
+  hmetree->Branch("nu_offshellW_phi", &nu_offshellW_Phi_);
+  hmetree->Branch("nu_offshellW_pt", &nu_offshellW_Pt_);
+  hmetree->Branch("nu_offshellW_E", &nu_offshellW_E_);
+  hmetree->Branch("onshellW_eta", &onshellW_Eta_);
+  hmetree->Branch("onshellW_phi", &onshellW_Phi_);
+  hmetree->Branch("onshellW_pt", &onshellW_Pt_);
+  hmetree->Branch("onshellW_E", &onshellW_E_);
+  hmetree->Branch("onshellW_Mass", &onshellW_Mass_);
+  hmetree->Branch("offshellW_eta", &offshellW_Eta_);
+  hmetree->Branch("offshellW_phi", &offshellW_Phi_);
+  hmetree->Branch("offshellW_pt", &offshellW_Pt_);
+  hmetree->Branch("offshellW_E", &offshellW_E_);
+  hmetree->Branch("offshellW_Mass", &offshellW_Mass_);
+  hmetree->Branch("htoWW_Eta", &htoWW_Eta_);
+  hmetree->Branch("htoWW_Phi", &htoWW_Phi_);
+  hmetree->Branch("htoWW_Pt", &htoWW_Pt_);
+  hmetree->Branch("htoWW_E", &htoWW_E_);
+  hmetree->Branch("htoWW_Mass", &htoWW_Mass_);
 
-  hmetree->Branch("b1_Eta", &b1_Eta);
-  hmetree->Branch("b1_Phi", &b1_Phi);
-  hmetree->Branch("b1_Pt", &b1_Pt);
-  hmetree->Branch("b1_Px", &b1_Px);
-  hmetree->Branch("b1_Py", &b1_Py);
-  hmetree->Branch("b1_E", &b1_E);
-  hmetree->Branch("b1_Mass", &b1_Mass);
-  hmetree->Branch("b2_Eta", &b2_Eta);
-  hmetree->Branch("b2_Phi", &b2_Phi);
-  hmetree->Branch("b2_Pt", &b2_Pt);
-  hmetree->Branch("b2_Px", &b2_Px);
-  hmetree->Branch("b2_Py", &b2_Py);
-  hmetree->Branch("b2_E", &b2_E);
-  hmetree->Branch("b2_Mass", &b2_Mass);
+  hmetree->Branch("b1_Eta", &b1_Eta_);
+  hmetree->Branch("b1_Phi", &b1_Phi_);
+  hmetree->Branch("b1_Pt", &b1_Pt_);
+  hmetree->Branch("b1_Px", &b1_Px_);
+  hmetree->Branch("b1_Py", &b1_Py_);
+  hmetree->Branch("b1_E", &b1_E_);
+  hmetree->Branch("b1_Mass", &b1_Mass_);
+  hmetree->Branch("b2_Eta", &b2_Eta_);
+  hmetree->Branch("b2_Phi", &b2_Phi_);
+  hmetree->Branch("b2_Pt", &b2_Pt_);
+  hmetree->Branch("b2_Px", &b2_Px_);
+  hmetree->Branch("b2_Py", &b2_Py_);
+  hmetree->Branch("b2_E", &b2_E_);
+  hmetree->Branch("b2_Mass", &b2_Mass_);
 
-  hmetree->Branch("b1jet_Eta", &b1jet_Eta);
-  hmetree->Branch("b1jet_Phi", &b1jet_Phi);
-  hmetree->Branch("b1jet_Pt", &b1jet_Pt);
-  hmetree->Branch("b1jet_Px", &b1jet_Px);
-  hmetree->Branch("b1jet_Py", &b1jet_Py);
-  hmetree->Branch("b1jet_E", &b1jet_Energy);
-  hmetree->Branch("b1jet_Mass", &b1jet_Mass);
-  hmetree->Branch("b2jet_Eta", &b2jet_Eta);
-  hmetree->Branch("b2jet_Phi", &b2jet_Phi);
-  hmetree->Branch("b2jet_Pt", &b2jet_Pt);
-  hmetree->Branch("b2jet_Px", &b2jet_Px);
-  hmetree->Branch("b2jet_Py", &b2jet_Py);
-  hmetree->Branch("b2jet_E", &b2jet_Energy);
-  hmetree->Branch("b2jet_Mass", &b2jet_Mass);
-  hmetree->Branch("b2jet_dR", &b2jet_dR);
-  hmetree->Branch("b1jet_dR", &b1jet_dR);
+  hmetree->Branch("b1jet_Eta", &b1jet_Eta_);
+  hmetree->Branch("b1jet_Phi", &b1jet_Phi_);
+  hmetree->Branch("b1jet_Pt", &b1jet_Pt_);
+  hmetree->Branch("b1jet_Px", &b1jet_Px_);
+  hmetree->Branch("b1jet_Py", &b1jet_Py_);
+  hmetree->Branch("b1jet_E", &b1jet_Energy_);
+  hmetree->Branch("b1jet_Mass", &b1jet_Mass_);
+  hmetree->Branch("b2jet_Eta", &b2jet_Eta_);
+  hmetree->Branch("b2jet_Phi", &b2jet_Phi_);
+  hmetree->Branch("b2jet_Pt", &b2jet_Pt_);
+  hmetree->Branch("b2jet_Px", &b2jet_Px_);
+  hmetree->Branch("b2jet_Py", &b2jet_Py_);
+  hmetree->Branch("b2jet_E", &b2jet_Energy_);
+  hmetree->Branch("b2jet_Mass", &b2jet_Mass_);
+  hmetree->Branch("b2jet_dR", &b2jet_dR_);
+  hmetree->Branch("b1jet_dR", &b1jet_dR_);
 
-  hmetree->Branch("htoBB_Eta", &htoBB_Eta);
-  hmetree->Branch("htoBB_Phi", &htoBB_Phi);
-  hmetree->Branch("htoBB_Pt", &htoBB_Pt);
-  hmetree->Branch("htoBB_E", &htoBB_E);
-  hmetree->Branch("htoBB_Mass", &htoBB_Mass);
-  hmetree->Branch("b1rescalefactor",&b1rescalefactor);
-  hmetree->Branch("b2rescalefactor",&b2rescalefactor);
-  hmetree->Branch("b1rescalefactor_true",&b1rescalefactor_true);
-  hmetree->Branch("b2rescalefactor_true",&b2rescalefactor_true);
-  hmetree->Branch("rescalec1",&rescalec1);
-  hmetree->Branch("rescalec2",&rescalec2);
-  hmetree->Branch("rescalec1_true",&rescalec1_true);
-  hmetree->Branch("rescalec2_true",&rescalec2_true);
+  hmetree->Branch("htoBB_Eta", &htoBB_Eta_);
+  hmetree->Branch("htoBB_Phi", &htoBB_Phi_);
+  hmetree->Branch("htoBB_Pt", &htoBB_Pt_);
+  hmetree->Branch("htoBB_E", &htoBB_E_);
+  hmetree->Branch("htoBB_Mass", &htoBB_Mass_);
+  hmetree->Branch("b1rescalefactor",&b1rescalefactor_);
+  hmetree->Branch("b2rescalefactor",&b2rescalefactor_);
+  hmetree->Branch("b1rescalefactor_true_",&b1rescalefactor_true_);
+  hmetree->Branch("b2rescalefactor_true_",&b2rescalefactor_true_);
+  hmetree->Branch("rescalec1",&rescalec1_);
+  hmetree->Branch("rescalec2",&rescalec2_);
+  hmetree->Branch("rescalec1_true_",&rescalec1_true_);
+  hmetree->Branch("rescalec2_true_",&rescalec2_true_);
 
-  hmetree->Branch("htoBB_jets_Eta", &htoBB_jets_Eta);
-  hmetree->Branch("htoBB_jets_Phi", &htoBB_jets_Phi);
-  hmetree->Branch("htoBB_jets_Pt", &htoBB_jets_Pt);
-  hmetree->Branch("htoBB_jets_E", &htoBB_jets_E);
-  hmetree->Branch("htoBB_jets_Mass", &htoBB_jets_Mass);
+  hmetree->Branch("htoBB_jets_Eta", &htoBB_jets_Eta_);
+  hmetree->Branch("htoBB_jets_Phi", &htoBB_jets_Phi_);
+  hmetree->Branch("htoBB_jets_Pt", &htoBB_jets_Pt_);
+  hmetree->Branch("htoBB_jets_E", &htoBB_jets_E_);
+  hmetree->Branch("htoBB_jets_Mass", &htoBB_jets_Mass_);
 
-  hmetree->Branch("heavyMassEstimatormet_E",&heavyMassEstimatormet_E);
-  hmetree->Branch("heavyMassEstimatormet_Phi",&heavyMassEstimatormet_Phi);
-  hmetree->Branch("heavyMassEstimatormet_Px",&heavyMassEstimatormet_Px);
-  hmetree->Branch("heavyMassEstimatormet_Py",&heavyMassEstimatormet_Py);
-  hmetree->Branch("ideal_met_Px", &ideal_met_Px);
-  hmetree->Branch("ideal_met_Py", &ideal_met_Py);
-  hmetree->Branch("ideal_met_E", &ideal_met_E);
-
-
-  hmetree->Branch("h2tohh_Eta", &h2tohh_Eta);
-  hmetree->Branch("h2tohh_Phi", &h2tohh_Phi);
-  hmetree->Branch("h2tohh_Pt", &h2tohh_Pt);
-  hmetree->Branch("h2tohh_E", &h2tohh_E);
-  hmetree->Branch("h2tohh_Mass", &h2tohh_Mass);
+  hmetree->Branch("heavyMassEstimatormet_E",&heavyMassEstimatormet_E_);
+  hmetree->Branch("heavyMassEstimatormet_Phi",&heavyMassEstimatormet_Phi_);
+  hmetree->Branch("heavyMassEstimatormet_Px",&heavyMassEstimatormet_Px_);
+  hmetree->Branch("heavyMassEstimatormet_Py",&heavyMassEstimatormet_Py_);
+  hmetree->Branch("ideal_met_Px", &ideal_met_Px_);
+  hmetree->Branch("ideal_met_Py", &ideal_met_Py_);
+  hmetree->Branch("ideal_met_E", &ideal_met_E_);
 
 
-  hmetree->Branch("met_true",&met);
-  hmetree->Branch("met_phi_true",&met_phi);
-  hmetree->Branch("met_px_true",&met_px);
-  hmetree->Branch("met_py_true",&met_py);
+  hmetree->Branch("h2tohh_Eta", &h2tohh_Eta_);
+  hmetree->Branch("h2tohh_Phi", &h2tohh_Phi_);
+  hmetree->Branch("h2tohh_Pt", &h2tohh_Pt_);
+  hmetree->Branch("h2tohh_E", &h2tohh_E_);
+  hmetree->Branch("h2tohh_Mass", &h2tohh_Mass_);
 
-  hmetree->Branch("eta_nuoffshellW_true", &eta_nuoffshellW_true);
-  hmetree->Branch("phi_nuoffshellW_true", &phi_nuoffshellW_true);
-  hmetree->Branch("eta_nuonshellW_true", &eta_nuonshellW_true);
-  hmetree->Branch("phi_nuonshellW_true", &phi_nuonshellW_true);
-  hmetree->Branch("pt_nuoffshellW_true", &pt_nuoffshellW_true);
-  hmetree->Branch("px_nuoffshellW_true", &px_nuoffshellW_true);
-  hmetree->Branch("py_nuoffshellW_true", &py_nuoffshellW_true);
-  hmetree->Branch("pt_nuonshellW_true", &pt_nuonshellW_true);
-  hmetree->Branch("px_nuonshellW_true", &px_nuonshellW_true);
-  hmetree->Branch("py_nuonshellW_true", &py_nuonshellW_true);
-  hmetree->Branch("mass_offshellW_true", &mass_offshellW_true);
-  hmetree->Branch("mass_onshellW_true", &mass_onshellW_true);
-  hmetree->Branch("mass_h2_true", &mass_h2tohh_true);
-  hmetree->Branch("pt_h2_true", &pt_h2tohh_true);
-  hmetree->Branch("mass_htoWW_true", &mass_htoWW_true);
-  hmetree->Branch("mass_h2_expect", &mass_h2_expect);
 
-  hmetree->Branch("weight", &weight);
-  hmetree->Branch("weight1", &weight1);
-  hmetree->Branch("weight2", &weight2);
-  hmetree->Branch("weight3", &weight3);
-  hmetree->Branch("weight4", &weight4);
-  hmetree->Branch("control", &control);
+  hmetree->Branch("met_true_",&met_);
+  hmetree->Branch("met_phi_true_",&met_phi_);
+  hmetree->Branch("met_px_true_",&met_px_);
+  hmetree->Branch("met_py_true_",&met_py_);
+
+  hmetree->Branch("eta_nuoffshellW_true_", &eta_nuoffshellW_true_);
+  hmetree->Branch("phi_nuoffshellW_true_", &phi_nuoffshellW_true_);
+  hmetree->Branch("eta_nuonshellW_true_", &eta_nuonshellW_true_);
+  hmetree->Branch("phi_nuonshellW_true_", &phi_nuonshellW_true_);
+  hmetree->Branch("pt_nuoffshellW_true_", &pt_nuoffshellW_true_);
+  hmetree->Branch("px_nuoffshellW_true_", &px_nuoffshellW_true_);
+  hmetree->Branch("py_nuoffshellW_true_", &py_nuoffshellW_true_);
+  hmetree->Branch("pt_nuonshellW_true_", &pt_nuonshellW_true_);
+  hmetree->Branch("px_nuonshellW_true_", &px_nuonshellW_true_);
+  hmetree->Branch("py_nuonshellW_true_", &py_nuonshellW_true_);
+  hmetree->Branch("mass_offshellW_true_", &mass_offshellW_true_);
+  hmetree->Branch("mass_onshellW_true_", &mass_onshellW_true_);
+  hmetree->Branch("mass_h2_true_", &mass_h2tohh_true_);
+  hmetree->Branch("pt_h2_true_", &pt_h2tohh_true_);
+  hmetree->Branch("mass_htoWW_true_", &mass_htoWW_true_);
+  hmetree->Branch("mass_h2_expect", &mass_h2_expect_);
+
+  hmetree->Branch("weight", &weight_);
+  hmetree->Branch("weight1", &weight1_);
+  hmetree->Branch("weight2", &weight2_);
+  hmetree->Branch("weight3", &weight3_);
+  hmetree->Branch("weight4", &weight4_);
+  hmetree->Branch("control", &control_);
 
   //also init tree
 
@@ -803,27 +814,27 @@ heavyMassEstimator::assignMuLorentzVec(int control){
   //  runheavyMassEstimator() control/2 == 0, namely control =0 here, we have correct muon lorentz Vector pair
   //
   //std::cout <<" beign muon assignment " << std::endl;
-  if (simulation){
-    if (onshellMarker == 1 && control == 0){
-	mu_onshellW_lorentz = hme_lep1_lorentz;
-	mu_offshellW_lorentz = hme_lep2_lorentz; }
-    else if (onshellMarker == 1 && control == 1){
-	mu_onshellW_lorentz = hme_lep2_lorentz;
-	mu_offshellW_lorentz = hme_lep1_lorentz;}
-    else if (onshellMarker == 2 && control == 0){
-	mu_onshellW_lorentz = hme_lep2_lorentz;
-	mu_offshellW_lorentz = hme_lep1_lorentz;}
-    else if (onshellMarker == 2 && control == 1){
-	mu_onshellW_lorentz = hme_lep1_lorentz;
-	mu_offshellW_lorentz = hme_lep2_lorentz;}
+  if (simulation_){
+    if (onshellMarker_ == 1 && control == 0){
+	mu_onshellW_lorentz_ = hme_lep1_lorentz_;
+	mu_offshellW_lorentz_ = hme_lep2_lorentz_; }
+    else if (onshellMarker_ == 1 && control == 1){
+	mu_onshellW_lorentz_ = hme_lep2_lorentz_;
+	mu_offshellW_lorentz_ = hme_lep1_lorentz_;}
+    else if (onshellMarker_ == 2 && control == 0){
+	mu_onshellW_lorentz_ = hme_lep2_lorentz_;
+	mu_offshellW_lorentz_ = hme_lep1_lorentz_;}
+    else if (onshellMarker_ == 2 && control == 1){
+	mu_onshellW_lorentz_ = hme_lep1_lorentz_;
+	mu_offshellW_lorentz_ = hme_lep2_lorentz_;}
   }//simulation case
   else {
     if (control == 0){
-	mu_onshellW_lorentz = hme_lep1_lorentz;
-	mu_offshellW_lorentz = hme_lep2_lorentz;}
+	mu_onshellW_lorentz_ = hme_lep1_lorentz_;
+	mu_offshellW_lorentz_ = hme_lep2_lorentz_;}
     else if (control == 1){
-	mu_onshellW_lorentz = hme_lep2_lorentz;
-	mu_offshellW_lorentz = hme_lep1_lorentz;}
+	mu_onshellW_lorentz_ = hme_lep2_lorentz_;
+	mu_offshellW_lorentz_ = hme_lep1_lorentz_;}
 
   }//real case, assign them randomly
   //std::cout <<" end muon assignment " << std::endl;
@@ -850,9 +861,7 @@ heavyMassEstimator::generatenu1_etaphi(){
 float 
 heavyMassEstimator::genEtaGuass(float mean, float rms){
 
-  TRandom3 *etaGenerator = new TRandom3();
-  float eta = etaGenerator->Gaus(mean, rms);
-  delete etaGenerator;
+  float eta = rnd_->Gaus(mean, rms);
 
   return eta;
 
@@ -862,42 +871,48 @@ heavyMassEstimator::genEtaGuass(float mean, float rms){
 float 
 heavyMassEstimator::genPhiFlat(){
 
-  TRandom3 *phiGenerator = new TRandom3();
   float pi = 3.1415926;
-  float phi = phiGenerator->Uniform(-pi, pi);
-  delete phiGenerator;
+  float phi = rnd_->Uniform(-pi, pi);
 
   return phi;
 }
 
+//------------ method to load TH1F object from ROOT file -----------------------------
+const TH1F* loadHistogram1d(const TFile* file, const std::string& histName)
+{
+  const TH1F* hist = dynamic_cast<TH1F*>((const_cast<TFile*>(file))->Get(histName.data()));
+  assert(hist);
+  std::string histName_cloned = std::string(histName).append("_cloned");
+  const TH1F* hist_cloned = (TH1F*)hist->Clone(histName_cloned.data());
+  return hist_cloned;
+}
+
+//------------ method to load TH1F object from ROOT file -----------------------------
+const TH2F* loadHistogram2d(const TFile* file, const std::string& histName)
+{
+  const TH2F* hist = dynamic_cast<TH2F*>((const_cast<TFile*>(file))->Get(histName.data()));
+  assert(hist);
+  std::string histName_cloned = std::string(histName).append("_cloned");
+  const TH2F* hist_cloned = (TH2F*)hist->Clone(histName_cloned.data());
+  return hist_cloned;
+}
+
 //------------ method called to readout TH1F onshellWmasspdf from root file -----------------------------
 //
-TH1F*
+const TH1F*
 heavyMassEstimator::readoutonshellWMassPDF(){
 
-
-  //TFile* file = new TFile("/home/taohuang/work/CMSSW_7_3_1/src/DiHiggsWW/heavyMassEstimator/plugins/heavyMassEstimatorRefPDF.ROOT");
-  //TFile* file = new TFile(RefPDFfile_.c_str(), "READ");
-  // TFile* file = TFile::Open(RefPDFfile_.c_str(), "READ");
-  TH1F* onshellWmasspdf = (TH1F*)file->Get("onshellWmasspdf");
-  // std::cout <<" print onshellWMass PDF " ; onshellWmasspdf->Print();
-  //delete file;
-  //file->Close();
+  const TH1F* onshellWmasspdf = loadHistogram1d(file_, "onshellWmasspdf");
   return onshellWmasspdf;
 
 }
 
 //------------ method called to readout TH1F offshellWmasspdf from root file -----------------------------
 //
-TH1F*
+const TH1F*
 heavyMassEstimator::readoutoffshellWMassPDF(){
 
-
-  //TFile* file = new TFile("/home/taohuang/work/CMSSW_7_3_1/src/DiHiggsWW/heavyMassEstimator/plugins/heavyMassEstimatorRefPDF.ROOT");
-  // TFile* file = TFile::Open(RefPDFfile_.c_str(),"READ");
-  TH1F* offshellWmasspdf = (TH1F*)file->Get("offshellWmasspdf");
-  //delete file;
-  //file->Close();
+  const TH1F* offshellWmasspdf = loadHistogram1d(file_, "offshellWmasspdf");
   return offshellWmasspdf;
 
 }
@@ -905,86 +920,56 @@ heavyMassEstimator::readoutoffshellWMassPDF(){
 
 //------------ method called to readout TH2F onoffshellWmasspdf from root file -----------------------------
 //
-TH2F*
+const TH2F*
 heavyMassEstimator::readoutonoffshellWMassPDF(){
 
-
-  //TFile* file = new TFile("/home/taohuang/work/CMSSW_7_3_1/src/DiHiggsWW/heavyMassEstimator/plugins/heavyMassEstimatorRefPDF.ROOT");
-  //TFile* file = TFile::Open(RefPDFfile_.c_str(),"READ");
-  TH2F* onoffshellWmasspdf = (TH2F*)file->Get("onoffshellWmasspdf");
-  //std::cout <<" print onoffshellWMass PDF " ; onoffshellWmasspdf->Print();
-  //delete file;
-  //file->Close();
+  const TH2F* onoffshellWmasspdf = loadHistogram2d(file_, "onoffshellWmasspdf");
   return onoffshellWmasspdf;
 
 }
 
 
-//------------ method called to readout TH1F onshellWmasspdf from root file -----------------------------
+//------------ method called to readout TH1F onshellnuptpdf from root file -----------------------------
 //
-TH1F*
+const TH1F*
 heavyMassEstimator::readoutonshellnuptPDF(){
 
-
-  //TFile* file = new TFile("/home/taohuang/work/CMSSW_7_3_1/src/DiHiggsWW/heavyMassEstimator/plugins/heavyMassEstimatorRefPDF.ROOT");
-  // TFile* file = TFile::Open(RefPDFfile_.c_str(),"READ");
-  TH1F* onshellnuptpdf = (TH1F*)file->Get("onshellnuptpdf");
-  //std::cout <<" print onshellnupt PDF " ; onshellnuptpdf->Print();
-  //delete file;
-  //file->Close();
+  const TH1F* onshellnuptpdf = loadHistogram1d(file_, "onshellnuptpdf");
   return onshellnuptpdf;
 
 }
 
-//------------ method called to readout TH1F onshellWmasspdf from root file -----------------------------
+//------------ method called to readout TH1F bjetrescalec1pdf from root file -----------------------------
 //
-TH1F*
+const TH1F*
 heavyMassEstimator::readoutbjetrescalec1PDF(){
 
-
-  //TFile* file = new TFile("/home/taohuang/work/CMSSW_7_3_1/src/DiHiggsWW/heavyMassEstimator/plugins/heavyMassEstimatorRefPDF.ROOT");
-  //   TFile* file = TFile::Open(RefPDFfile_.c_str(), "READ");
-  TH1F* bjetrescalec1pdf;
-  bjetrescalec1pdf = PUsample?(TH1F*)file->Get("recobjetrescalec1pdfPU40"):(TH1F*)file->Get("bjetrescalec1dR4pdf");
-  //bjetrescalec1pdf = (TH1F*)file->Get("recobjetrescalec1pdf");
-  //delete file;
-  //file->Close();
+  std::string histName = ( PUsample_ ) ? "recobjetrescalec1pdfPU40" : "bjetrescalec1dR4pdf"; 
+  const TH1F* bjetrescalec1pdf = loadHistogram1d(file_, histName);
   return bjetrescalec1pdf;
 
 }
 
-//------------ method called to readout TH1F onshellWmasspdf from root file -----------------------------
+//------------ method called to readout TH1F bjetrescalec2pdf from root file -----------------------------
 //
-TH1F*
+const TH1F*
 heavyMassEstimator::readoutbjetrescalec2PDF(){
 
-
-  //TFile* file = new TFile("/home/taohuang/work/CMSSW_7_3_1/src/DiHiggsWW/heavyMassEstimator/plugins/heavyMassEstimatorRefPDF.ROOT");
-  //TFile* file = new TFile(RefPDFfile_.c_str());
-  TH1F* bjetrescalec2pdf;
-  bjetrescalec2pdf = PUsample?(TH1F*)file->Get("recobjetrescalec2pdfPU40"):(TH1F*)file->Get("bjetrescalec2dR4pdf");
-  // std::cout <<" print c2 PDF " ; bjetrescalec2pdf->Print();
-  //delete file;
-  //file->Close();
+  std::string histName = ( PUsample_ ) ? "recobjetrescalec2pdfPU40" : "bjetrescalec2dR4pdf";
+  const TH1F* bjetrescalec2pdf = loadHistogram1d(file_, histName);
   return bjetrescalec2pdf;
 
 }
 
-//------------ method called to readout TH1F onshellWmasspdf from root file -----------------------------
+//------------ method called to readout TH2F bjetrescalec1c2pdf from root file -----------------------------
 //
-TH2F*
+const TH2F*
 heavyMassEstimator::readoutbjetrescalec1c2PDF(){
 
-
-  //TFile* file = new TFile("/home/taohuang/work/CMSSW_7_3_1/src/DiHiggsWW/heavyMassEstimator/plugins/heavyMassEstimatorRefPDF.ROOT");
-  //TFile* file = new TFile(RefPDFfile_.c_str());
-  TH2F* bjetrescalec1c2pdf = (TH2F*)file->Get("bjetrescalec1c2pdf");
-  /// delete file;
-  //file->Close();
+  const TH2F* bjetrescalec1c2pdf = loadHistogram2d(file_, "bjetrescalec1c2pdf");
   return bjetrescalec1c2pdf;
 
 }
-
 
 //------------ method to describe onshellW mass Probability density function ------------------------------
 //
@@ -1026,7 +1011,7 @@ heavyMassEstimator::onshellWMassRandomWalk(float x0, float step, float random){
 //------------ use random walk to generate random onshellW mass accroding to wmass pdf --------------
 //
 float
-heavyMassEstimator::onshellWMassRandomWalk(float x0, float step, float random, TH1F* hist){
+heavyMassEstimator::onshellWMassRandomWalk(float x0, float step, float random, const TH1F* hist){
   float xmin = 50;
   float xmax = 90;
   //periodic boundary codition
@@ -1045,10 +1030,8 @@ heavyMassEstimator::onshellWMassRandomWalk(float x0, float step, float random, T
   int binx1_1,binx1_2;
   double bincent0_1,bincont0_1;// center and content
   double bincent1_1,bincont1_1;
-
-  binx0_1 = hist->FindBin(x0);
-  binx1_1 = hist->FindBin(x1);
-
+  binx0_1 = (const_cast<TH1F*>(hist))->FindBin(x0);
+  binx1_1 = (const_cast<TH1F*>(hist))->FindBin(x1);
   if ((float)hist->GetBinCenter(binx0_1) < x0){
     binx0_2 = binx0_1+1;
   }
@@ -1072,6 +1055,7 @@ heavyMassEstimator::onshellWMassRandomWalk(float x0, float step, float random, T
   double w1 = (x1-bincent1_1)*(bincont1_1-hist->GetBinContent(binx1_2))/(bincent1_1-hist->GetBinCenter(binx1_2))+bincont1_1;
   //transition probability
   double w = w1/w0;
+
   //std::cout <<" initial " <<x0 <<" step " << step << " x1 "<< x1 << " transition probability " << w << " random " << random << std::endl;
   if (w >= 1.00) return x1;
   if (w < 1.00 && random < (float)w) return x1;
@@ -1083,22 +1067,22 @@ heavyMassEstimator::onshellWMassRandomWalk(float x0, float step, float random, T
 //---------- weight solution by a histogram --------------------------------------------------------
 //
 float
-heavyMassEstimator::weightfromhist(TH1F* hist, float x){
+heavyMassEstimator::weightfromhist(const TH1F* hist, float x){
   //hist should be scaled
 
   float weight = 0.0;
-  int bin1 = hist->FindBin(x);
+  int bin1 = (const_cast<TH1F*>(hist))->FindBin(x);
   //first make sure that x is within range
   if (bin1 == 0 || bin1 == hist->GetNbinsX()+1) return weight=0;
 
-  weight = hist->Interpolate(x);
+  weight = (const_cast<TH1F*>(hist))->Interpolate(x);
   return weight;
 }
 
 //---------- weight solution by a 2d histogram --------------------------------------------------------
 //
 float
-heavyMassEstimator::weightfromhist(TH2F* hist, float x, float y, bool whole){
+heavyMassEstimator::weightfromhist(const TH2F* hist, float x, float y, bool whole){
   //hist should be scaled
 
   float weight = 0.0;
@@ -1131,7 +1115,7 @@ heavyMassEstimator::weightfromonshellnupt(float nupt){
   weight = -16.925+12.4066*nupt-0.2884*std::pow(nupt,2)+0.00203*std::pow(nupt,3)+7.695e-7*std::pow(nupt,4)
     -7.2191e-8*std::pow(nupt,5)+2.499e-10*std::pow(nupt,6);
   if (weight < 0 && nupt<5) return 0.0;
-  if (weight < 0 && verbose > 0) std::cout << " error! nupt " << nupt << " weight " << weight << std::endl;
+  if (weight < 0 && verbose_ > 0) std::cout << " error! nupt " << nupt << " weight " << weight << std::endl;
   weight = weight/max;
   return weight;
 }
@@ -1139,13 +1123,13 @@ heavyMassEstimator::weightfromonshellnupt(float nupt){
 
 //------------- method called to calculate pt of nuetrinos from on-shell W decay ------------
 float 
-heavyMassEstimator::nu1pt_onshellW(EtaPhi nu1_etaphi, TLorentzVector* lep1lorentz, float wMass){
+heavyMassEstimator::nu1pt_onshellW(EtaPhi nu1_etaphi, const TLorentzVector& lep1lorentz, float wMass){
    
   float nu1_pt=0.0;
-  //   TVector2 *numu_phi = new TVector(nu_etaphi.first(),lep1lorentz->eta());
-  float deltaeta = nu1_etaphi.first - lep1lorentz->Eta();
-  float deltaphi = nu1_etaphi.second - lep1lorentz->Phi();
-  nu1_pt = wMass*wMass/(2*lep1lorentz->Pt()*(cosh(deltaeta)-cos(deltaphi)));
+  //   TVector2 numu_phi = TVector2(nu_etaphi.first(),lep1lorentz.Eta());
+  float deltaeta = nu1_etaphi.first - lep1lorentz.Eta();
+  float deltaphi = nu1_etaphi.second - lep1lorentz.Phi();
+  nu1_pt = wMass*wMass/(2*lep1lorentz.Pt()*(cosh(deltaeta)-cos(deltaphi)));
   return nu1_pt;
 
 }
@@ -1153,36 +1137,30 @@ heavyMassEstimator::nu1pt_onshellW(EtaPhi nu1_etaphi, TLorentzVector* lep1lorent
 //------------ method called to check whether the solution in this case exist or not -------------
 // not use now, may be helpful later 
 bool
-heavyMassEstimator::checkSolution(TLorentzVector* jetslorentz,
-    TLorentzVector* lep1lorentz,
-    TLorentzVector* lep2lorentz,
-    TLorentzVector* nu1lorentz, int control, float hMass){
+heavyMassEstimator::checkSolution(const TLorentzVector& jetslorentz,
+    const TLorentzVector& lep1lorentz,
+    const TLorentzVector& lep2lorentz,
+    const TLorentzVector& nu1lorentz, int control, float hMass){
 
-
-
-  TLorentzVector* tmplorentz = new TLorentzVector(lep1lorentz->Px()+lep2lorentz->Px()+nu1lorentz->Px(),
-	lep1lorentz->Py()+lep2lorentz->Py()+nu1lorentz->Py(),
-	lep1lorentz->Pz()+lep2lorentz->Pz()+nu1lorentz->Pz(),
-	lep1lorentz->Energy()+lep2lorentz->Energy()+nu1lorentz->Energy());
+  TLorentzVector tmplorentz(lep1lorentz.Px()+lep2lorentz.Px()+nu1lorentz.Px(),
+	lep1lorentz.Py()+lep2lorentz.Py()+nu1lorentz.Py(),
+	lep1lorentz.Pz()+lep2lorentz.Pz()+nu1lorentz.Pz(),
+	lep1lorentz.Energy()+lep2lorentz.Energy()+nu1lorentz.Energy());
 
   float nu_tmp_px;
   float nu_tmp_py;
   float nu_tmp_pt;
 
-  nu_tmp_px = -jetslorentz->Px()-lep1lorentz->Px()-lep2lorentz->Px()-nu1lorentz->Px();
-  nu_tmp_py = -jetslorentz->Py()-lep1lorentz->Py()-lep2lorentz->Py()-nu1lorentz->Py();
+  nu_tmp_px = -jetslorentz.Px()-lep1lorentz.Px()-lep2lorentz.Px()-nu1lorentz.Px();
+  nu_tmp_py = -jetslorentz.Py()-lep1lorentz.Py()-lep2lorentz.Py()-nu1lorentz.Py();
   TVector2 nu_pxpy(nu_tmp_px, nu_tmp_py);
 
   nu_tmp_pt = nu_pxpy.Mod();
 
   float chdeltaeta;//cosh(nu2_eta-tmp2lorenz_eta)
-  TLorentzVector* tmp2lorentz = new TLorentzVector(sqrt(pow(tmplorentz->Pt(),2)+pow(tmplorentz->M(),2)),0,tmplorentz->Pz(),tmplorentz->Energy());// construct massless lorentzvector with same pz and E as tmplorentzvector
+  TLorentzVector tmp2lorentz(sqrt(pow(tmplorentz.Pt(),2)+pow(tmplorentz.M(),2)),0,tmplorentz.Pz(),tmplorentz.Energy());// construct massless lorentzvector with same pz and E as tmplorentzvector
 
-  chdeltaeta = (pow(hMass,2)+pow(jetslorentz->Pt(),2)-pow(tmplorentz->M(),2)-pow(tmplorentz->Pt(),2)-pow(nu_tmp_pt,2))/(2*tmp2lorentz->Pt()*nu_tmp_pt);
-
-
-  delete tmplorentz;
-  delete tmp2lorentz;
+  chdeltaeta = (pow(hMass,2)+pow(jetslorentz.Pt(),2)-pow(tmplorentz.M(),2)-pow(tmplorentz.Pt(),2)-pow(nu_tmp_pt,2))/(2*tmp2lorentz.Pt()*nu_tmp_pt);
 
   // place the cuts we may need 
   //
@@ -1193,79 +1171,72 @@ heavyMassEstimator::checkSolution(TLorentzVector* jetslorentz,
 
 
 //------------- method called to calculate lorentzvector of second nuetrinos, which is from offshell W -----------
-// return true if we can get nu_offshellW_lorentz
+// return true if we can get nu_offshellW_lorentz_
 bool 
-heavyMassEstimator::nulorentz_offshellW(TLorentzVector* jetslorentz, 
-    TLorentzVector* lep1lorentz, 
-    TLorentzVector* lep2lorentz, 
-    TLorentzVector* nu1lorentz, 
-    TLorentzVector* nu2lorentz, int control, float hMass){
+heavyMassEstimator::nulorentz_offshellW(const TLorentzVector& jetslorentz, 
+    const TLorentzVector& lep1lorentz, 
+    const TLorentzVector& lep2lorentz, 
+    TLorentzVector& nu1lorentz, 
+    TLorentzVector& nu2lorentz, int control, float hMass){
 
-  TLorentzVector* tmplorentz = new TLorentzVector(lep1lorentz->Px()+lep2lorentz->Px()+nu1lorentz->Px(),
-	lep1lorentz->Py()+lep2lorentz->Py()+nu1lorentz->Py(),
-	lep1lorentz->Pz()+lep2lorentz->Pz()+nu1lorentz->Pz(),
-	lep1lorentz->Energy()+lep2lorentz->Energy()+nu1lorentz->Energy());
+  TLorentzVector tmplorentz(lep1lorentz.Px()+lep2lorentz.Px()+nu1lorentz.Px(),
+	lep1lorentz.Py()+lep2lorentz.Py()+nu1lorentz.Py(),
+	lep1lorentz.Pz()+lep2lorentz.Pz()+nu1lorentz.Pz(),
+	lep1lorentz.Energy()+lep2lorentz.Energy()+nu1lorentz.Energy());
   float nu_tmp_px;
   float nu_tmp_py;
   float nu_tmp_pt;
 
-  nu_tmp_px = -jetslorentz->Px()-lep1lorentz->Px()-lep2lorentz->Px()-nu1lorentz->Px();
-  nu_tmp_py = -jetslorentz->Py()-lep1lorentz->Py()-lep2lorentz->Py()-nu1lorentz->Py();
+  nu_tmp_px = -jetslorentz.Px()-lep1lorentz.Px()-lep2lorentz.Px()-nu1lorentz.Px();
+  nu_tmp_py = -jetslorentz.Py()-lep1lorentz.Py()-lep2lorentz.Py()-nu1lorentz.Py();
   TVector2 nu_pxpy(nu_tmp_px, nu_tmp_py);
 
   nu_tmp_pt = nu_pxpy.Mod();
 
   float chdeltaeta;//cosh(nu_offshellW_eta-tmp2lorentz_eta)
-  TLorentzVector* tmp2lorentz = new TLorentzVector(sqrt(pow(tmplorentz->Pt(),2)+pow(tmplorentz->M(),2)),0,tmplorentz->Pz(),tmplorentz->Energy());//fake one massless lorentzvector with same pz and E
+  TLorentzVector tmp2lorentz(sqrt(pow(tmplorentz.Pt(),2)+pow(tmplorentz.M(),2)),0,tmplorentz.Pz(),tmplorentz.Energy());//fake one massless lorentzvector with same pz and E
 
-  chdeltaeta = (pow(hMass,2)+pow(jetslorentz->Pt(),2)-pow(tmplorentz->M(),2)-pow(tmplorentz->Pt(),2)-pow(nu_tmp_pt,2))/(2*tmp2lorentz->Pt()*nu_tmp_pt);
+  chdeltaeta = (pow(hMass,2)+pow(jetslorentz.Pt(),2)-pow(tmplorentz.M(),2)-pow(tmplorentz.Pt(),2)-pow(nu_tmp_pt,2))/(2*tmp2lorentz.Pt()*nu_tmp_pt);
 
-  if (verbose >0 ){
+  if (verbose_ >0 ){
 
     std::cout << "From jetLorentz nu2 px: " << nu_tmp_px << " py: "<< nu_tmp_py << " chdeltaeta: " << chdeltaeta << std::endl;
-    float chdeltaeta_tmp = (pow(hMass,2)+2*(hmemet_vec2->Px()*tmp2lorentz->Px()+hmemet_vec2->Py()*tmp2lorentz->Py())-pow(nu_tmp_pt,2))/(2*tmp2lorentz->Pt()*nu_tmp_pt);
-    std::cout << "From hmemet nu2 px: "<< hmemet_vec2->Px()-nu1lorentz->Px() <<" py: "<< hmemet_vec2->Py()-nu1lorentz->Py()
+    float chdeltaeta_tmp = (pow(hMass,2)+2*(hmemet_vec2_.Px()*tmp2lorentz.Px()+hmemet_vec2_.Py()*tmp2lorentz.Py())-pow(nu_tmp_pt,2))/(2*tmp2lorentz.Pt()*nu_tmp_pt);
+    std::cout << "From hmemet nu2 px: "<< hmemet_vec2_.Px()-nu1lorentz.Px() <<" py: "<< hmemet_vec2_.Py()-nu1lorentz.Py()
 	<<" chdeltaeta: " << chdeltaeta_tmp << std::endl; 
   }
   if (chdeltaeta < 1.0) {
-    delete tmplorentz;
-    delete tmp2lorentz;
-    nu2lorentz->SetPtEtaPhiM(0, 0, 0, 0);
+    nu2lorentz.SetPtEtaPhiM(0, 0, 0, 0);
     return false;
   }
   float nu_tmp_phi = nu_pxpy.Phi_mpi_pi(nu_pxpy.Phi());
   float deltaeta = acosh(chdeltaeta);
-  float nu_tmp_eta = (control == 1) ? (tmp2lorentz->Eta()-deltaeta) : (tmp2lorentz->Eta()+deltaeta);//control = j%2 
+  float nu_tmp_eta = (control_ == 1) ? (tmp2lorentz.Eta()-deltaeta) : (tmp2lorentz.Eta()+deltaeta);//control_ = j%2 
   // should check whether deltaeta > 1
-  // std::cout <<"control "<< control <<" nu_tmp_px " << nu_tmp_px << "  nu_tmp_py " << nu_tmp_py << " nu_tmp_pt " << nu_tmp_pt 
+  // std::cout <<"control "<< control_ <<" nu_tmp_px " << nu_tmp_px << "  nu_tmp_py " << nu_tmp_py << " nu_tmp_pt " << nu_tmp_pt 
   //         << " cosh(deltaeta2) " << chdeltaeta << " nu_tmp_eta " << nu_tmp_eta << " nu_tmp_phi " << nu_tmp_phi << std::endl; 
   if (fabs(nu_tmp_eta) > 7) {
-    delete tmplorentz;
-    delete tmp2lorentz;
-    nu2lorentz->SetPtEtaPhiM(0, 0, 0, 0);
+    nu2lorentz.SetPtEtaPhiM(0, 0, 0, 0);
     return false;  //from simulation, |nu_offshellW_Eta|<6
   }
-  nu2lorentz->SetPtEtaPhiM(nu_tmp_pt, nu_tmp_eta, nu_tmp_phi, 0);
-  TLorentzVector* htoww_tmp = new TLorentzVector(*tmplorentz+*nu2lorentz);
-  if (abs(htoww_tmp->M()-hMass) >2 && verbose > 0){
-    std::cout <<" set Higgs Mass" << hMass << " heavyMassEstimator higgs mass" << htoww_tmp->M() << std::endl;
-    htoww_tmp->Print();
-    //verbose = 1;
+  nu2lorentz.SetPtEtaPhiM(nu_tmp_pt, nu_tmp_eta, nu_tmp_phi, 0);
+  TLorentzVector htoww_tmp = tmplorentz + nu2lorentz;
+  if (abs(htoww_tmp.M()-hMass) >2 && verbose_ > 0){
+    std::cout <<" set Higgs Mass" << hMass << " heavyMassEstimator higgs mass" << htoww_tmp.M() << std::endl;
+    htoww_tmp.Print();
+    //verbose_ = 1;
   }
-  if (verbose > 0){
-    std::cout << "tmplorentz mass " << tmplorentz->M(); tmplorentz->Print();
-    std::cout << "tmp2lorentz mass " << tmp2lorentz->M(); tmp2lorentz->Print();
-    std::cout << " jets lorentz"; jetslorentz->Print(); 
-    std::cout << " lep1 lorentz "; lep1lorentz->Print();
-    std::cout << " lep2 lorentz "; lep2lorentz->Print();
-    std::cout << " nu1 lorentz "; nu1lorentz->Print();
-    std::cout << " tmp lorentz "; tmplorentz->Print();
-    std::cout << " nu2 lorentz "; nu2lorentz->Print();
+  if (verbose_ > 0){
+    std::cout << "tmplorentz mass " << tmplorentz.M(); tmplorentz.Print();
+    std::cout << "tmp2lorentz mass " << tmp2lorentz.M(); tmp2lorentz.Print();
+    std::cout << " jets lorentz"; jetslorentz.Print(); 
+    std::cout << " lep1 lorentz "; lep1lorentz.Print();
+    std::cout << " lep2 lorentz "; lep2lorentz.Print();
+    std::cout << " nu1 lorentz "; nu1lorentz.Print();
+    std::cout << " tmp lorentz "; tmplorentz.Print();
+    std::cout << " nu2 lorentz "; nu2lorentz.Print();
   }
-  // std::cout << " nu_offshellW lorentz "; nu2lorentz->Print();
-  delete tmplorentz;
-  delete tmp2lorentz;
-  delete htoww_tmp;
+  // std::cout << " nu_offshellW lorentz "; nu2lorentz.Print();
 
   return true; 
 }
@@ -1273,76 +1244,69 @@ heavyMassEstimator::nulorentz_offshellW(TLorentzVector* jetslorentz,
 
 
 //------------- method called to calculate lorentzvector of second nuetrinos, which is from offshell W -----------
-// return true if we can get nu_offshellW_lorentz
+// return true if we can get nu_offshellW_lorentz_
 bool 
-heavyMassEstimator::nulorentz_offshellW(TVector2* met, 
-    TLorentzVector* lep1lorentz, 
-    TLorentzVector* lep2lorentz, 
-    TLorentzVector* nu1lorentz, 
-    TLorentzVector* nu2lorentz, int control, float hMass){
+heavyMassEstimator::nulorentz_offshellW(const TVector2& met, 
+    const TLorentzVector& lep1lorentz, 
+    const TLorentzVector& lep2lorentz, 
+    TLorentzVector& nu1lorentz, 
+    TLorentzVector& nu2lorentz, int control, float hMass){
 
-  TLorentzVector* tmplorentz = new TLorentzVector(lep1lorentz->Px()+lep2lorentz->Px()+nu1lorentz->Px(),
-	lep1lorentz->Py()+lep2lorentz->Py()+nu1lorentz->Py(),
-	lep1lorentz->Pz()+lep2lorentz->Pz()+nu1lorentz->Pz(),
-	lep1lorentz->Energy()+lep2lorentz->Energy()+nu1lorentz->Energy());
+  TLorentzVector tmplorentz(lep1lorentz.Px()+lep2lorentz.Px()+nu1lorentz.Px(),
+	lep1lorentz.Py()+lep2lorentz.Py()+nu1lorentz.Py(),
+	lep1lorentz.Pz()+lep2lorentz.Pz()+nu1lorentz.Pz(),
+	lep1lorentz.Energy()+lep2lorentz.Energy()+nu1lorentz.Energy());
   float nu_tmp_px;
   float nu_tmp_py;
   float nu_tmp_pt;
 
-  nu_tmp_px = met->Px()-nu1lorentz->Px();
-  nu_tmp_py = met->Py()-nu1lorentz->Py();
+  nu_tmp_px = met.Px()-nu1lorentz.Px();
+  nu_tmp_py = met.Py()-nu1lorentz.Py();
   TVector2 nu_pxpy(nu_tmp_px, nu_tmp_py);
 
   nu_tmp_pt = nu_pxpy.Mod();
 
   float chdeltaeta;//cosh(nu_offshellW_eta-tmp2lorentz_eta)
-  TLorentzVector* tmp2lorentz = new TLorentzVector(sqrt(pow(tmplorentz->Pt(),2)+pow(tmplorentz->M(),2)),0,tmplorentz->Pz(),tmplorentz->Energy());//fake one massless lorentzvector with same pz and E
+  TLorentzVector tmp2lorentz(sqrt(pow(tmplorentz.Pt(),2)+pow(tmplorentz.M(),2)),0,tmplorentz.Pz(),tmplorentz.Energy());//fake one massless lorentzvector with same pz and E
 
-  chdeltaeta = (pow(hMass,2)+2*(nu_pxpy.Px()*tmplorentz->Px()+nu_pxpy.Py()*tmplorentz->Py())-pow(tmplorentz->M(),2))/(2*tmp2lorentz->Pt()*nu_tmp_pt);
-  if (verbose >0 ){
+  chdeltaeta = (pow(hMass,2)+2*(nu_pxpy.Px()*tmplorentz.Px()+nu_pxpy.Py()*tmplorentz.Py())-pow(tmplorentz.M(),2))/(2*tmp2lorentz.Pt()*nu_tmp_pt);
+  if (verbose_ >0 ){
     std::cout << "nu2 px: " << nu_tmp_px << " py: "<< nu_tmp_py << std::endl;
     std::cout << "chdeltaeta " << chdeltaeta << std::endl;
-    std::cout << "tmp2lorentz "; tmp2lorentz->Print();
+    std::cout << "tmp2lorentz "; tmp2lorentz.Print();
   }
   if (chdeltaeta < 1.0) {
-    delete tmplorentz;
-    delete tmp2lorentz;
-    nu2lorentz->SetPtEtaPhiM(0, 0, 0, 0);
+    nu2lorentz.SetPtEtaPhiM(0, 0, 0, 0);
     return false;
   }
   float nu_tmp_phi = nu_pxpy.Phi_mpi_pi(nu_pxpy.Phi());
   float deltaeta = acosh(chdeltaeta);
-  float nu_tmp_eta = (control == 1) ? (tmp2lorentz->Eta()-deltaeta) : (tmp2lorentz->Eta()+deltaeta);//control = j%2 
+  float nu_tmp_eta = (control_ == 1) ? (tmp2lorentz.Eta()-deltaeta) : (tmp2lorentz.Eta()+deltaeta);//control = j%2 
   // should check whether deltaeta > 1
-  // std::cout <<"control "<< control <<" nu_tmp_px " << nu_tmp_px << "  nu_tmp_py " << nu_tmp_py << " nu_tmp_pt " << nu_tmp_pt 
+  // std::cout <<"control "<< control_ <<" nu_tmp_px " << nu_tmp_px << "  nu_tmp_py " << nu_tmp_py << " nu_tmp_pt " << nu_tmp_pt 
   //         << " cosh(deltaeta2) " << chdeltaeta << " nu_tmp_eta " << nu_tmp_eta << " nu_tmp_phi " << nu_tmp_phi << std::endl; 
   if (fabs(nu_tmp_eta) > 7) {
-    delete tmplorentz;
-    delete tmp2lorentz;
-    nu2lorentz->SetPtEtaPhiM(0, 0, 0, 0);
+    nu2lorentz.SetPtEtaPhiM(0, 0, 0, 0);
     return false;  //from simulation, |nu_offshellW_Eta|<6
   }
-  nu2lorentz->SetPtEtaPhiM(nu_tmp_pt, nu_tmp_eta, nu_tmp_phi, 0);
-  TLorentzVector* htoww_tmp = new TLorentzVector(*tmplorentz+*nu2lorentz);
-  if (abs(htoww_tmp->M()-hMass) >2 && verbose > 0){
-    std::cout <<" set Higgs Mass" << hMass << " heavyMassEstimator higgs mass" << htoww_tmp->M() << std::endl;
-    htoww_tmp->Print();
-    //verbose = 1;
+  nu2lorentz.SetPtEtaPhiM(nu_tmp_pt, nu_tmp_eta, nu_tmp_phi, 0);
+  TLorentzVector htoww_tmp = tmplorentz + nu2lorentz;
+  if (abs(htoww_tmp.M()-hMass) >2 && verbose_ > 0){
+    std::cout <<" set Higgs Mass" << hMass << " heavyMassEstimator higgs mass" << htoww_tmp.M() << std::endl;
+    htoww_tmp.Print();
+    //verbose_ = 1;
   }
-  if (verbose > 0){
-    std::cout << "tmplorentz mass " << tmplorentz->M(); tmplorentz->Print();
-    std::cout << "tmp2lorentz mass " << tmp2lorentz->M(); tmp2lorentz->Print();
-    std::cout << " met Tvector2 "; met->Print(); 
-    std::cout << " lep1 lorentz "; lep1lorentz->Print();
-    std::cout << " lep2 lorentz "; lep2lorentz->Print();
-    std::cout << " nu1 lorentz "; nu1lorentz->Print();
-    std::cout << " tmp lorentz "; tmplorentz->Print();
-    std::cout << " nu2 lorentz "; nu2lorentz->Print();
+  if (verbose_ > 0){
+    std::cout << "tmplorentz mass " << tmplorentz.M(); tmplorentz.Print();
+    std::cout << "tmp2lorentz mass " << tmp2lorentz.M(); tmp2lorentz.Print();
+    std::cout << " met Tvector2 "; met.Print(); 
+    std::cout << " lep1 lorentz "; lep1lorentz.Print();
+    std::cout << " lep2 lorentz "; lep2lorentz.Print();
+    std::cout << " nu1 lorentz "; nu1lorentz.Print();
+    std::cout << " tmp lorentz "; tmplorentz.Print();
+    std::cout << " nu2 lorentz "; nu2lorentz.Print();
   }
-  // std::cout << " nu_offshellW lorentz "; nu2lorentz->Print();
-  delete tmplorentz;
-  delete tmp2lorentz;
-  delete htoww_tmp;
+  // std::cout << " nu_offshellW lorentz "; nu2lorentz.Print();
 
   return true; 
 }
@@ -1354,52 +1318,52 @@ heavyMassEstimator::bjetsCorrection(){
   //c1rescale taken from pdf
   TLorentzVector b1lorentz;
   TLorentzVector b2lorentz;
-  if (hme_b1jet_lorentz->Pt()> hme_b2jet_lorentz->Pt()){
-    b1lorentz = *hme_b1jet_lorentz;
-    b2lorentz = *hme_b2jet_lorentz;
+  if (hme_b1jet_lorentz_.Pt()> hme_b2jet_lorentz_.Pt()){
+    b1lorentz = hme_b1jet_lorentz_;
+    b2lorentz = hme_b2jet_lorentz_;
   }
   else {
-    if(verbose > 0) {
+    if(verbose_ > 0) {
         std::cout <<"wired b1jet is not jet with larger pt "<< std::endl;
     }
-    b1lorentz = *hme_b2jet_lorentz;
-    b2lorentz = *hme_b1jet_lorentz;
+    b1lorentz = hme_b2jet_lorentz_;
+    b2lorentz = hme_b1jet_lorentz_;
   }
   //x1*c2*c2+x2*c2+x3=0, slove for c2
   float x1 = b2lorentz.M2();
-  float x2 = 2*rescalec1*(b1lorentz*b2lorentz);
-  float x3 = rescalec1*rescalec1*b1lorentz.M2()-125*125;
-  if (x2<0 && verbose > 0) std::cerr <<"error bjets lorentzvector dot productor less than 0 " << std::endl;
+  float x2 = 2*rescalec1_*(b1lorentz*b2lorentz);
+  float x3 = rescalec1_*rescalec1_*b1lorentz.M2()-125*125;
+  if (x2<0 && verbose_ > 0) std::cerr <<"error bjets lorentzvector dot productor less than 0 " << std::endl;
   /*std::cout <<" b2lorentz mass "<<  b2lorentz.M2();  b2lorentz.Print();
-  std::cout <<" rescale1  "<< rescalec1 <<" x1 "<< x1 <<" x2 " << x2 << " x3 "<< x3 << std::endl;
+  std::cout <<" rescale1  "<< rescalec1_ <<" x1 "<< x1 <<" x2 " << x2 << " x3 "<< x3 << std::endl;
   std::cout <<"c2 solution1 " << (-x2+std::sqrt(x2*x2-4*x1*x3))/(2*x1)<<" solution2 "<<(-x2-std::sqrt(x2*x2-4*x1*x3))/(2*x1)<<std::endl;
-  std::cout <<"b1jet pt "<< hme_b1jet_lorentz->Pt() <<" b2jet pt " << hme_b2jet_lorentz->Pt() << std::endl;
+  std::cout <<"b1jet pt "<< hme_b1jet_lorentz_.Pt() <<" b2jet pt " << hme_b2jet_lorentz_.Pt() << std::endl;
    */
   if ((x2*x2-4*x1*x3) <0 or x1==0){
 	return false;
 	std::cout <<" error ! there is no soluations for bjetsCorrection "<< std::endl;
   }
-  rescalec2 = (-x2+std::sqrt(x2*x2-4*x1*x3))/(2*x1);
-  /*if (rescalec2<=0){
+  rescalec2_ = (-x2+std::sqrt(x2*x2-4*x1*x3))/(2*x1);
+  /*if (rescalec2_<=0){
 	std::cout <<" b1jet mass "<< b1lorentz.M(); b1lorentz.Print(); 
 	std::cout <<" b2jet mass "<< b2lorentz.M(); b2lorentz.Print(); 
 	std::cout <<" x1 "<< x1 <<" x2 "<< x2 <<" x3 "<< x3 << std::endl;
   	std::cout <<"c2 solution1 " << (-x2+std::sqrt(x2*x2-4*x1*x3))/(2*x1)<<" solution2 "<<(-x2-std::sqrt(x2*x2-4*x1*x3))/(2*x1)<<std::endl;
 	}*/
-  if (hme_b1jet_lorentz->Pt()> hme_b2jet_lorentz->Pt()){
-    b1rescalefactor = rescalec1;
-    b2rescalefactor = rescalec2;
+  if (hme_b1jet_lorentz_.Pt()> hme_b2jet_lorentz_.Pt()){
+    b1rescalefactor_ = rescalec1_;
+    b2rescalefactor_ = rescalec2_;
   }else{
-    if(verbose > 0) {
+    if(verbose_ > 0) {
         std::cout <<"wired b1jet is not jet with larger pt "<< std::endl;
     }
-    b2rescalefactor = rescalec1;
-    b1rescalefactor = rescalec2;
+    b2rescalefactor_ = rescalec1_;
+    b1rescalefactor_ = rescalec2_;
   }
-  //TLorentzVector htobb_corr = b1rescalefactor*b1lorentz+ b2rescalefactor*b2lorentz;
-  //finally b1rescalefactor->b1jet b2rescalefactor->b2jet;
+  //TLorentzVector htobb_corr = b1rescalefactor_*b1lorentz+ b2rescalefactor_*b2lorentz;
+  //finally b1rescalefactor_->b1jet b2rescalefactor_->b2jet;
   //std::cout <<" htoBB m_h after correction "<< htobb_corr.M(); htobb_corr.Print();
-  //std::cout <<" htoBB hme m_h"<< htoBB_lorentz->M(); htoBB_lorentz->Print();
+  //std::cout <<" htoBB hme m_h"<< htoBB_lorentz_.M(); htoBB_lorentz_.Print();
   return true;
 
 }
@@ -1408,45 +1372,45 @@ heavyMassEstimator::bjetsCorrection(){
 void 
 heavyMassEstimator::metCorrection(){
   //std::cout <<" b1rescalefactor " << b1rescalefactor << " b2rescalefactor " << b2rescalefactor << std::endl;
-  float metpx_correction = hmemet_vec2->Px()-(b1rescalefactor-1)*hme_b1jet_lorentz->Px()-(b2rescalefactor-1)*hme_b2jet_lorentz->Px();
-  float metpy_correction = hmemet_vec2->Py()-(b1rescalefactor-1)*hme_b1jet_lorentz->Py()-(b2rescalefactor-1)*hme_b2jet_lorentz->Py();
-  *met_vec2 = TVector2(metpx_correction, metpy_correction);
+  float metpx_correction = hmemet_vec2_.Px()-(b1rescalefactor_-1)*hme_b1jet_lorentz_.Px()-(b2rescalefactor_-1)*hme_b2jet_lorentz_.Px();
+  float metpy_correction = hmemet_vec2_.Py()-(b1rescalefactor_-1)*hme_b1jet_lorentz_.Py()-(b2rescalefactor_-1)*hme_b2jet_lorentz_.Py();
+  met_vec2_ = TVector2(metpx_correction, metpy_correction);
 
   //std::cout <<" metCorrection metpx_correction " <<  metpx_correction <<" metpy_correction " << metpy_correction << std::endl;
 }
 
 //--------------------------- retrun heavyMassEstimator result ----------------------------------------------------------
-TH1F
+const TH1F&
 heavyMassEstimator::getheavyMassEstimatorh2(){
 
-  //std::cout <<" RMS "<< heavyMassEstimator_h2Mass.GetRMS() << " entries " << heavyMassEstimator_h2Mass.GetEntries() << std::endl;
-  return heavyMassEstimator_h2Mass;
+  //std::cout <<" RMS "<< heavyMassEstimator_h2Mass_->GetRMS() << " entries " << heavyMassEstimator_h2Mass_->GetEntries() << std::endl;
+  return *heavyMassEstimator_h2Mass_;
 
 }
 
 //--------------------------- retrun heavyMassEstimator result ----------------------------------------------------------
-TH1F
+const TH1F&
 heavyMassEstimator::getheavyMassEstimatorh2weight1(){
 
-  //std::cout <<" RMS "<< heavyMassEstimator_h2Mass.GetRMS() << " entries " << heavyMassEstimator_h2Mass.GetEntries() << std::endl;
-  return heavyMassEstimator_h2Massweight1;
+  //std::cout <<" RMS "<< heavyMassEstimator_h2Mass_->GetRMS() << " entries " << heavyMassEstimator_h2Mass_->GetEntries() << std::endl;
+  return *heavyMassEstimator_h2Massweight1_;
 
 }
 
 //--------------------------- retrun heavyMassEstimator result ----------------------------------------------------------
-TH1F
+const TH1F&
 heavyMassEstimator::getheavyMassEstimatorh2weight4(){
 
-  //std::cout <<" RMS "<< heavyMassEstimator_h2Mass.GetRMS() << " entries " << heavyMassEstimator_h2Mass.GetEntries() << std::endl;
-  return heavyMassEstimator_h2Massweight4;
+  //std::cout <<" RMS "<< heavyMassEstimator_h2Mass_->GetRMS() << " entries " << heavyMassEstimator_h2Mass_->GetEntries() << std::endl;
+  return *heavyMassEstimator_h2Massweight4_;
 
 }
 
 //--------------------------- retrun heavyMassEstimator result ----------------------------------------------------------
-TTree*
+const TTree*
 heavyMassEstimator::getheavyMassEstimatorTree(){
 
-  return hmetree;
+  return hmetree_;
 
 }
 
@@ -1458,22 +1422,22 @@ void
 heavyMassEstimator::printTrueLorentz(){
 
   std::cout <<"  print out lorentz vector pass to heavyMassEstimator " << std::endl;
-  if (simulation) std::cout <<" onshell channel is " << onshellMarker << std::endl;
-  std::cout <<" lep1 " ; hme_lep1_lorentz->Print();
-  std::cout <<" lep2 " ; hme_lep2_lorentz->Print();
-  std::cout <<"bjets,  M_h= " << htoBB_lorentz->M(); htoBB_lorentz->Print();
-  std::cout <<"met px " << hmemet_vec2->Px() <<" py" <<hmemet_vec2->Py() << std::endl;
-  if (simulation) {
+  if (simulation_) std::cout <<" onshell channel is " << onshellMarker_ << std::endl;
+  std::cout <<" lep1 " ; hme_lep1_lorentz_.Print();
+  std::cout <<" lep2 " ; hme_lep2_lorentz_.Print();
+  std::cout <<"bjets,  M_h= " << htoBB_lorentz_.M(); htoBB_lorentz_.Print();
+  std::cout <<"met px " << hmemet_vec2_.Px() <<" py" <<hmemet_vec2_.Py() << std::endl;
+  if (simulation_) {
     std::cout <<"following is pure gen level infromation " << std::endl;
-    std::cout <<" nu1 px "<<nu1_lorentz_true->Px() << " py " <<nu1_lorentz_true->Py() << " pt "<< nu1_lorentz_true->Pt() 
-	<< " eta "<<nu1_lorentz_true->Eta() << " phi "<< nu1_lorentz_true->Phi() << std::endl;
-    std::cout <<" nu2 px "<<nu2_lorentz_true->Px() << " py " <<nu2_lorentz_true->Py() << " pt "<< nu2_lorentz_true->Pt() 
-	<< " eta "<<nu2_lorentz_true->Eta() << " phi "<< nu2_lorentz_true->Phi() << std::endl;
-    std::cout <<" onshellW mass "<< onshellW_lorentz_true->M(); onshellW_lorentz_true->Print();  
-    std::cout <<"offshellW mass " <<offshellW_lorentz_true->M(); offshellW_lorentz_true->Print();  
-    std::cout <<" htoWW mass "<< htoWW_lorentz_true->M(); htoWW_lorentz_true->Print();
-    std::cout <<" htoBB mass "<< htoBB_lorentz_true->M(); htoBB_lorentz_true->Print();
-    std::cout <<" h2tohh, pz " <<h2tohh_lorentz_true->Pz() << " Mass " << h2tohh_lorentz_true->M() << std::endl;
+    std::cout <<" nu1 px "<<nu1_lorentz_true_.Px() << " py " <<nu1_lorentz_true_.Py() << " pt "<< nu1_lorentz_true_.Pt() 
+	<< " eta "<<nu1_lorentz_true_.Eta() << " phi "<< nu1_lorentz_true_.Phi() << std::endl;
+    std::cout <<" nu2 px "<<nu2_lorentz_true_.Px() << " py " <<nu2_lorentz_true_.Py() << " pt "<< nu2_lorentz_true_.Pt() 
+	<< " eta "<<nu2_lorentz_true_.Eta() << " phi "<< nu2_lorentz_true_.Phi() << std::endl;
+    std::cout <<" onshellW mass "<< onshellW_lorentz_true_.M(); onshellW_lorentz_true_.Print();  
+    std::cout <<"offshellW mass " <<offshellW_lorentz_true_.M(); offshellW_lorentz_true_.Print();  
+    std::cout <<" htoWW mass "<< htoWW_lorentz_true_.M(); htoWW_lorentz_true_.Print();
+    std::cout <<" htoBB mass "<< htoBB_lorentz_true_.M(); htoBB_lorentz_true_.Print();
+    std::cout <<" h2tohh, pz " <<h2tohh_lorentz_true_.Pz() << " Mass " << h2tohh_lorentz_true_.M() << std::endl;
   }
 }
 
@@ -1483,14 +1447,14 @@ void
 heavyMassEstimator::printheavyMassEstimatorresult(){
 
   std::cout <<" print out results from heavyMassEstimator, namely survival soltions " << std::endl;
-  std::cout <<" onshell mu ";mu_onshellW_lorentz->Print();
-  std::cout <<" onshell nu ";nu_onshellW_lorentz->Print();
-  std::cout <<"offshell mu ";mu_offshellW_lorentz->Print();
-  std::cout <<"offshell nu ";nu_offshellW_lorentz->Print();
-  std::cout <<" onshell W  "; onshellW_lorentz->Print();
-  std::cout <<"offshell W  "; offshellW_lorentz->Print();
-  std::cout <<" htoBB      "; htoBB_lorentz->Print();
-  std::cout <<" h2tohh  pz"<< h2tohh_lorentz->Pz() << " mass "<< h2tohh_lorentz->M() << std::endl; 
+  std::cout <<" onshell mu ";mu_onshellW_lorentz_.Print();
+  std::cout <<" onshell nu ";nu_onshellW_lorentz_.Print();
+  std::cout <<"offshell mu ";mu_offshellW_lorentz_.Print();
+  std::cout <<"offshell nu ";nu_offshellW_lorentz_.Print();
+  std::cout <<" onshell W  "; onshellW_lorentz_.Print();
+  std::cout <<"offshell W  "; offshellW_lorentz_.Print();
+  std::cout <<" htoBB      "; htoBB_lorentz_.Print();
+  std::cout <<" h2tohh  pz"<< h2tohh_lorentz_.Pz() << " mass "<< h2tohh_lorentz_.M() << std::endl; 
 
 }
 

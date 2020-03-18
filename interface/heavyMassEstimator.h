@@ -47,35 +47,45 @@ class heavyMassEstimator{
 
     public:
     //constructor
-    heavyMassEstimator(TLorentzVector* lep1_lorentz, TLorentzVector* lep2_lorentz, TLorentzVector* b1jet_lorentz, TLorentzVector* b2jet_lorentz, 
-	TLorentzVector* totjets_lorentz,TLorentzVector* met_lorentz, TLorentzVector* nu1_lorentz, TLorentzVector* nu2_lorentz,
-	TLorentzVector* b_genp_lorentz, TLorentzVector* bbar_genp_lorentz, TLorentzVector* h2tohh_lorentz, int onshellMarker, bool simulation,	       bool PUsample_,
-	int ievent, bool weightfromonshellnupt_func, bool weightfromonshellnupt_hist, bool weightfromonoffshellWmass_hist,
-        int iterations, std::string RefPDFfile, bool useMET, int bjetrescaleAlgo, int metcorrection, int verbose_=0
-	);
-    //constructor 
-    heavyMassEstimator(TLorentzVector* lep1_lorentz, TLorentzVector* lep2_lorentz, TLorentzVector* b1jet_lorentz, TLorentzVector* b2jet_lorentz, 
-	TLorentzVector* totjets_lorentz,TLorentzVector* met_lorentz,
-	bool PUsample_, int ievent, bool weightfromonshellnupt_func, bool weightfromonshellnupt_hist, bool weightfromonoffshellWmass_hist,
-        int iterations, std::string RefPDFfile, bool useMET, int bjetrescaleAlgo, int metcorrection, int verbose_=0
-	);
+    heavyMassEstimator(bool PUsample, bool weightfromonshellnupt_func, bool weightfromonshellnupt_hist, bool weightfromonoffshellWmass_hist,
+        int iterations, const std::string& RefPDFfile, bool useMET, int bjetrescaleAlgo, int metcorrection, int verbose=0);
     heavyMassEstimator();
     ~heavyMassEstimator();
 
+    void set_inputs(const TLorentzVector& lep1_lorentz, const TLorentzVector& lep2_lorentz, 
+        const TLorentzVector& b1jet_lorentz, const TLorentzVector& b2jet_lorentz, 
+	const TLorentzVector& totjets_lorentz, const TLorentzVector& met_lorentz, 
+        const TLorentzVector* nu1_lorentz, const TLorentzVector* nu2_lorentz, 
+        const TLorentzVector* b_genp_lorentz, const TLorentzVector* bbar_genp_lorentz, 
+        const TLorentzVector* h2tohh_lorentz, 
+        int onshellMarker, 
+        bool simulation, 
+        int ievent);
+    void set_inputs(const TLorentzVector& lep1_lorentz, const TLorentzVector& lep2_lorentz, 
+        const TLorentzVector& b1jet_lorentz, const TLorentzVector& b2jet_lorentz, 
+	const TLorentzVector& totjets_lorentz, const TLorentzVector& met_lorentz, 
+        int ievent);
+
     private:
-      TTree *hmetree;
-      TH1F heavyMassEstimator_h2Mass;
-      TH1F heavyMassEstimator_h2Massweight1;
-      TH1F heavyMassEstimator_h2Massweight4;
-      TFile *file;
+      TTree* hmetree_;
+      TH1F* heavyMassEstimator_h2Mass_;
+      TH1F* heavyMassEstimator_h2Massweight1_;
+      TH1F* heavyMassEstimator_h2Massweight4_;
+      TFile* file_;
+      const TH1F* wmasshist_;
+      const TH2F* onoffshellWmass_hist_;
+      const TH1F* onshellnupt_hist_;
+      const TH1F* bjetrescalec1_hist_;
+      const TH1F* bjetrescalec2_hist_;
+      TRandom* rnd_;
  
    //runheavyMassEstimator
    public: 
       bool runheavyMassEstimator();
-      TH1F getheavyMassEstimatorh2();
-      TH1F getheavyMassEstimatorh2weight1();
-      TH1F getheavyMassEstimatorh2weight4();
-      TTree* getheavyMassEstimatorTree();
+      const TH1F& getheavyMassEstimatorh2();
+      const TH1F& getheavyMassEstimatorh2weight1();
+      const TH1F& getheavyMassEstimatorh2weight4();
+      const TTree* getheavyMassEstimatorTree();
       //TH1F* getheavyMassEstimatorNeutrio_onshell1();
       //TH1F* getheavyMassEstimatorNeutrio_onshell2();
       //TH1F* getheavyMassEstimatorNeutrio_offshell1();
@@ -91,37 +101,37 @@ class heavyMassEstimator{
       float genEtaGuass(float mean, float rms);
       float genPhiFlat();
       EtaPhi generatenu1_etaphi();
-      float nu1pt_onshellW(EtaPhi nu1_etaphi, TLorentzVector* lep1lorentz, float wMass);
-      bool  nulorentz_offshellW(TLorentzVector* jetlorentz, TLorentzVector* lep1lorentz, 
-			       TLorentzVector* lep2lorentz, TLorentzVector* nu1lorentz, 
- 			       TLorentzVector* nu2lorentz, int control, float hMass);
-      bool  nulorentz_offshellW(TVector2* met, TLorentzVector* lep1lorentz, 
-			       TLorentzVector* lep2lorentz, TLorentzVector* nu1lorentz, 
- 			       TLorentzVector* nu2lorentz, int control, float hMass);
-      bool checkSolution(TLorentzVector* jetslorentz,
-                          TLorentzVector* lep1lorentz,
-                          TLorentzVector* lep2lorentz,
-                          TLorentzVector* nu1lorentz, int control, float hMass); 
+      float nu1pt_onshellW(EtaPhi nu1_etaphi, const TLorentzVector& lep1lorentz, float wMass);
+      bool  nulorentz_offshellW(const TLorentzVector& jetlorentz, const TLorentzVector& lep1lorentz, 
+			        const TLorentzVector& lep2lorentz, TLorentzVector& nu1lorentz, 
+ 			        TLorentzVector& nu2lorentz, int control, float hMass);
+      bool  nulorentz_offshellW(const TVector2& met, const TLorentzVector& lep1lorentz, 
+			       const TLorentzVector& lep2lorentz, TLorentzVector& nu1lorentz, 
+ 			       TLorentzVector& nu2lorentz, int control, float hMass);
+      bool checkSolution(const TLorentzVector& jetslorentz,
+                         const TLorentzVector& lep1lorentz,
+                         const TLorentzVector& lep2lorentz,
+                         const TLorentzVector& nu1lorentz, int control, float hMass); 
       bool cutsCheck();
       void assignMuLorentzVec(int control);  
           
     private:
       float onshellWMassRandomWalk(float x0, float step, float random);
-      float onshellWMassRandomWalk(float x0, float step, float random, TH1F* hist);
+      float onshellWMassRandomWalk(float x0, float step, float random, const TH1F* hist);
       float onshellWMassPDF(float wmass);
   
     private:
-      TH1F* readoutonshellWMassPDF();
-      TH1F* readoutoffshellWMassPDF();
-      TH2F* readoutonoffshellWMassPDF();
-      TH1F* readoutonshellnuptPDF();
-      TH1F* readoutbjetrescalec1PDF();
-      TH1F* readoutbjetrescalec2PDF();
-      TH2F* readoutbjetrescalec1c2PDF();
+      const TH1F* readoutonshellWMassPDF();
+      const TH1F* readoutoffshellWMassPDF();
+      const TH2F* readoutonoffshellWMassPDF();
+      const TH1F* readoutonshellnuptPDF();
+      const TH1F* readoutbjetrescalec1PDF();
+      const TH1F* readoutbjetrescalec2PDF();
+      const TH2F* readoutbjetrescalec1c2PDF();
  
     private:
-      float weightfromhist(TH1F* pdf, float x); 
-      float weightfromhist(TH2F* pdf, float x, float y, bool whole=true); 
+      float weightfromhist(const TH1F* pdf, float x); 
+      float weightfromhist(const TH2F* pdf, float x, float y, bool whole=true); 
       float weightfromonshellnupt(float nupt); 
    
     private:
@@ -139,202 +149,202 @@ class heavyMassEstimator{
       void printheavyMassEstimatorresult(); 
 
     private:
-      int iev;
-      int onshellMarker;
-      bool simulation;
-      bool PUsample;
+      int iev_;
+      int onshellMarker_;
+      bool simulation_;
+      bool PUsample_;
       int iterations_;
       int seed_;
       std::string RefPDFfile_;
-      int verbose;
+      int verbose_;
       int metcorrection_;
       int bjetrescale_;
-      float b1rescalefactor;
-      float b2rescalefactor;
-      float rescalec1;
-      float rescalec2;
-      bool heavyMassEstimatordebug;   
+      float b1rescalefactor_;
+      float b2rescalefactor_;
+      float rescalec1_;
+      float rescalec2_;
+      bool heavyMassEstimatordebug_;   
 
     private:
-      TLorentzVector* hme_lep1_lorentz;
-      TLorentzVector* hme_lep2_lorentz;
-      TLorentzVector* hme_bjets_lorentz;
-      TLorentzVector* hme_b1jet_lorentz;
-      TLorentzVector* hme_b2jet_lorentz;
-      TLorentzVector* hme_totjets_lorentz;
-      TVector2* hmemet_vec2;
+      TLorentzVector hme_lep1_lorentz_;
+      TLorentzVector hme_lep2_lorentz_;
+      TLorentzVector hme_bjets_lorentz_;
+      TLorentzVector hme_b1jet_lorentz_;
+      TLorentzVector hme_b2jet_lorentz_;
+      TLorentzVector hme_totjets_lorentz_;
+      TVector2 hmemet_vec2_;
 
-      TLorentzVector* nu1_lorentz_true;
-      TLorentzVector* nu2_lorentz_true;
-      TLorentzVector* onshellW_lorentz_true;
-      TLorentzVector* offshellW_lorentz_true;
-      TLorentzVector* b1_lorentz;
-      TLorentzVector* b2_lorentz;
-      TLorentzVector* htoWW_lorentz_true;
-      TLorentzVector* htoBB_lorentz_true;
-      TLorentzVector* h2tohh_lorentz_true;
+      TLorentzVector nu1_lorentz_true_;
+      TLorentzVector nu2_lorentz_true_;
+      TLorentzVector onshellW_lorentz_true_;
+      TLorentzVector offshellW_lorentz_true_;
+      TLorentzVector b1_lorentz_;
+      TLorentzVector b2_lorentz_;
+      TLorentzVector htoWW_lorentz_true_;
+      TLorentzVector htoBB_lorentz_true_;
+      TLorentzVector h2tohh_lorentz_true_;
       
-      TLorentzVector* mu_onshellW_lorentz;
-      TLorentzVector* mu_offshellW_lorentz;
-      TLorentzVector* jets_lorentz;
-      TVector2* met_vec2;
-      TLorentzVector* nu_onshellW_lorentz;
-      TLorentzVector* nu_offshellW_lorentz;
-      TLorentzVector* offshellW_lorentz;
-      TLorentzVector* onshellW_lorentz;
-      TLorentzVector* htoWW_lorentz;
-      TLorentzVector* htoBB_lorentz;
-      TLorentzVector* h2tohh_lorentz;
+      TLorentzVector mu_onshellW_lorentz_;
+      TLorentzVector mu_offshellW_lorentz_;
+      TLorentzVector jets_lorentz_;
+      TVector2 met_vec2_;
+      TLorentzVector nu_onshellW_lorentz_;
+      TLorentzVector nu_offshellW_lorentz_;
+      TLorentzVector offshellW_lorentz_;
+      TLorentzVector onshellW_lorentz_;
+      TLorentzVector htoWW_lorentz_;
+      TLorentzVector htoBB_lorentz_;
+      TLorentzVector h2tohh_lorentz_;
 
 
     public:
-      void setlepton1kinematic(float px, float py, float pz, float E) {hme_lep1_lorentz->SetPxPyPzE(px, py,pz, E);}
-      void setlepton2kinematic(float px, float py, float pz, float E) {hme_lep2_lorentz->SetPxPyPzE(px, py,pz, E);}
-      void   setb1jetkinematic(float px, float py, float pz, float E) {hme_b1jet_lorentz->SetPxPyPzE(px, py,pz, E);}
-      void   setb2jetkinematic(float px, float py, float pz, float E) {hme_b2jet_lorentz->SetPxPyPzE(px, py,pz, E);}
-      void settotjetskinematic(float px, float py, float pz, float E) {hme_totjets_lorentz->SetPxPyPzE(px, py,pz, E);}
-      void setMET(float px,float py) {hmemet_vec2->Set(px, py); }
+      void setlepton1kinematic(float px, float py, float pz, float E) {hme_lep1_lorentz_.SetPxPyPzE(px, py,pz, E);}
+      void setlepton2kinematic(float px, float py, float pz, float E) {hme_lep2_lorentz_.SetPxPyPzE(px, py,pz, E);}
+      void setb1jetkinematic(float px, float py, float pz, float E) {hme_b1jet_lorentz_.SetPxPyPzE(px, py,pz, E);}
+      void setb2jetkinematic(float px, float py, float pz, float E) {hme_b2jet_lorentz_.SetPxPyPzE(px, py,pz, E);}
+      void settotjetskinematic(float px, float py, float pz, float E) {hme_totjets_lorentz_.SetPxPyPzE(px, py,pz, E);}
+      void setMET(float px,float py) {hmemet_vec2_.Set(px, py); }
 
 
     private:
 	
-      TLorentzVector ideal_met_lorentz;
-      TLorentzVector h2tohh_expect_lorentz;
+      TLorentzVector ideal_met_lorentz_;
+      TLorentzVector h2tohh_expect_lorentz_;
     private:
       //branches
-      float eta_mean;
-      float eta_rms;
-      float eta_gen; 
-      float phi_gen;
-      float wmass_gen;
-      float hmass_gen;
-      float metpx_gen;
-      float metpy_gen;
+      float eta_mean_;
+      float eta_rms_;
+      float eta_gen_; 
+      float phi_gen_;
+      float wmass_gen_;
+      float hmass_gen_;
+      float metpx_gen_;
+      float metpy_gen_;
        
       
-      int control;
-      float weight;
-      float weight1;//extra weight
-      float weight2;//extra weight
-      float weight3;//extra weight
-      float weight4;//extra weight
+      int control_;
+      float weight_;
+      float weight1_;//extra weight
+      float weight2_;//extra weight
+      float weight3_;//extra weight
+      float weight4_;//extra weight
  
-      float mu_onshellW_Eta;
-      float mu_onshellW_Phi;
-      float mu_onshellW_Pt;
-      float mu_onshellW_E;
-      float mu_offshellW_Eta;
-      float mu_offshellW_Phi;
-      float mu_offshellW_Pt;
-      float mu_offshellW_E;
-      float nu_onshellW_Eta;
-      float nu_onshellW_Phi;
-      float nu_onshellW_Pt;
-      float nu_onshellW_E;
-      float nu_offshellW_Eta;
-      float nu_offshellW_Phi;
-      float nu_offshellW_Pt;
-      float nu_offshellW_E;
+      float mu_onshellW_Eta_;
+      float mu_onshellW_Phi_;
+      float mu_onshellW_Pt_;
+      float mu_onshellW_E_;
+      float mu_offshellW_Eta_;
+      float mu_offshellW_Phi_;
+      float mu_offshellW_Pt_;
+      float mu_offshellW_E_;
+      float nu_onshellW_Eta_;
+      float nu_onshellW_Phi_;
+      float nu_onshellW_Pt_;
+      float nu_onshellW_E_;
+      float nu_offshellW_Eta_;
+      float nu_offshellW_Phi_;
+      float nu_offshellW_Pt_;
+      float nu_offshellW_E_;
       
-      float onshellW_Eta;
-      float onshellW_Phi;
-      float onshellW_Pt;
-      float onshellW_E;
-      float onshellW_Mass;
-      float offshellW_Eta;
-      float offshellW_Phi;
-      float offshellW_Pt;
-      float offshellW_E;
-      float offshellW_Mass;
+      float onshellW_Eta_;
+      float onshellW_Phi_;
+      float onshellW_Pt_;
+      float onshellW_E_;
+      float onshellW_Mass_;
+      float offshellW_Eta_;
+      float offshellW_Phi_;
+      float offshellW_Pt_;
+      float offshellW_E_;
+      float offshellW_Mass_;
     
-      float b1_Pt;
-      float b1_Px;
-      float b1_Py;
-      float b1_E;
-      float b1_Eta;
-      float b1_Phi;
-      float b1_Mass;
-      float b2_Pt;
-      float b2_Px;
-      float b2_Py;
-      float b2_E;
-      float b2_Eta;
-      float b2_Phi;
-      float b2_Mass;
+      float b1_Pt_;
+      float b1_Px_;
+      float b1_Py_;
+      float b1_E_;
+      float b1_Eta_;
+      float b1_Phi_;
+      float b1_Mass_;
+      float b2_Pt_;
+      float b2_Px_;
+      float b2_Py_;
+      float b2_E_;
+      float b2_Eta_;
+      float b2_Phi_;
+      float b2_Mass_;
 
-      float b1jet_Pt;
-      float b1jet_Px;
-      float b1jet_Py;
-      float b1jet_Energy;
-      float b1jet_Eta;
-      float b1jet_Phi;
-      float b1jet_Mass;
-      float b2jet_Pt;
-      float b2jet_Px;
-      float b2jet_Py;
-      float b2jet_Energy;
-      float b2jet_Eta;
-      float b2jet_Phi;
-      float b2jet_Mass;
-      float b1jet_dR;
-      float b2jet_dR;
-      float b1rescalefactor_true;
-      float b2rescalefactor_true;
-      float rescalec1_true;
-      float rescalec2_true;
+      float b1jet_Pt_;
+      float b1jet_Px_;
+      float b1jet_Py_;
+      float b1jet_Energy_;
+      float b1jet_Eta_;
+      float b1jet_Phi_;
+      float b1jet_Mass_;
+      float b2jet_Pt_;
+      float b2jet_Px_;
+      float b2jet_Py_;
+      float b2jet_Energy_;
+      float b2jet_Eta_;
+      float b2jet_Phi_;
+      float b2jet_Mass_;
+      float b1jet_dR_;
+      float b2jet_dR_;
+      float b1rescalefactor_true_;
+      float b2rescalefactor_true_;
+      float rescalec1_true_;
+      float rescalec2_true_;
        
-      float htoBB_jets_Eta;
-      float htoBB_jets_Phi;
-      float htoBB_jets_Pt;
-      float htoBB_jets_E;
-      float htoBB_jets_Mass;
-      float htoBB_Eta;
-      float htoBB_Phi;
-      float htoBB_Pt;
-      float htoBB_E;
-      float htoBB_Mass;
-      float htoWW_Eta;
-      float htoWW_Phi;
-      float htoWW_Pt;
-      float htoWW_E;
-      float htoWW_Mass;
+      float htoBB_jets_Eta_;
+      float htoBB_jets_Phi_;
+      float htoBB_jets_Pt_;
+      float htoBB_jets_E_;
+      float htoBB_jets_Mass_;
+      float htoBB_Eta_;
+      float htoBB_Phi_;
+      float htoBB_Pt_;
+      float htoBB_E_;
+      float htoBB_Mass_;
+      float htoWW_Eta_;
+      float htoWW_Phi_;
+      float htoWW_Pt_;
+      float htoWW_E_;
+      float htoWW_Mass_;
 
-      float heavyMassEstimatormet_E;
-      float heavyMassEstimatormet_Phi;
-      float heavyMassEstimatormet_Px;
-      float heavyMassEstimatormet_Py;
-      float ideal_met_E;
-      float ideal_met_Px;
-      float ideal_met_Py;
+      float heavyMassEstimatormet_E_;
+      float heavyMassEstimatormet_Phi_;
+      float heavyMassEstimatormet_Px_;
+      float heavyMassEstimatormet_Py_;
+      float ideal_met_E_;
+      float ideal_met_Px_;
+      float ideal_met_Py_;
 
-      float h2tohh_Eta;
-      float h2tohh_Phi;
-      float h2tohh_Pt;
-      float h2tohh_E;
-      float h2tohh_Mass;
+      float h2tohh_Eta_;
+      float h2tohh_Phi_;
+      float h2tohh_Pt_;
+      float h2tohh_E_;
+      float h2tohh_Mass_;
 
 
-      float met;
-      float met_phi;
-      float met_px;
-      float met_py;
+      float met_;
+      float met_phi_;
+      float met_px_;
+      float met_py_;
 
-      float eta_nuoffshellW_true;
-      float phi_nuoffshellW_true;
-      float pt_nuoffshellW_true;
-      float px_nuoffshellW_true;
-      float py_nuoffshellW_true;
-      float eta_nuonshellW_true;
-      float phi_nuonshellW_true;
-      float pt_nuonshellW_true;
-      float px_nuonshellW_true;
-      float py_nuonshellW_true;
-      float mass_offshellW_true;
-      float mass_onshellW_true;
-      float mass_htoWW_true;
-      float pt_h2tohh_true;
-      float mass_h2tohh_true;
-      float mass_h2_expect;
+      float eta_nuoffshellW_true_;
+      float phi_nuoffshellW_true_;
+      float pt_nuoffshellW_true_;
+      float px_nuoffshellW_true_;
+      float py_nuoffshellW_true_;
+      float eta_nuonshellW_true_;
+      float phi_nuonshellW_true_;
+      float pt_nuonshellW_true_;
+      float px_nuonshellW_true_;
+      float py_nuonshellW_true_;
+      float mass_offshellW_true_;
+      float mass_onshellW_true_;
+      float mass_htoWW_true_;
+      float pt_h2tohh_true_;
+      float mass_h2tohh_true_;
+      float mass_h2_expect_;
 
 };
    

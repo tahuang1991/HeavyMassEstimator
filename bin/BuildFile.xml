@@ -1,0 +1,4 @@
+<bin   file="testHME.cc" name="testHME">
+  <use name="hhAnalysis/Heavymassestimator"/>
+  <use name="root"/>
+</bin>

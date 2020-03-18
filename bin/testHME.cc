@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 
     //use boosted signal in evlist[7-9], mass = 1.6TeV
     //b1jet = ak8 fat jet, b2jet = empty as HME is using Hbb momentum
-    //bjetrescaleAlgo_ = 0 and metcorrection_= 0
+    //bjetrescaleAlgo = 0 and metcorrection= 0
      evlist[7].lep1_p4.SetPxPyPzE(-92.187746,54.858173,321.941003,339.343497);
      evlist[7].lep2_p4.SetPxPyPzE(-13.944575,12.626226,101.495754,103.224322);
      evlist[7].b1jet_p4.SetPxPyPzE(272.369183,-122.649673,-353.965748,465.0314);
@@ -146,16 +146,25 @@ int main(int argc, char *argv[])
  
     int nevent = 10;
     //HME configuration
-    bool PUSample_ = true;//whether event is from PU sample or not.
-    bool weightfromonshellnupt_func_ = false;
-    bool weightfromonshellnupt_hist_ = true;
-    bool weightfromonoffshellWmass_hist_ = true;
-    string RefPDFfile_ = "../data/REFPDFPU40.root";//the root file contains histogram for weighting 
+    bool PUSample = true;//whether event is from PU sample or not.
+    bool weightfromonshellnupt_func = false;
+    bool weightfromonshellnupt_hist = true;
+    bool weightfromonoffshellWmass_hist = true;
+    //string RefPDFfile = "../data/REFPDFPU40.root";//the root file contains histogram for weighting 
+    const char* cmssw_base = std::getenv("CMSSW_BASE");
+    if (!cmssw_base) {
+        std::cerr << "Error! Environmental variable CMSSW_BASE not set!\n"
+                  << "Please run cmsenv first.\n"
+                  << "When running without CMSSW, you still need this variable so that the\n"
+                  << "certain files can be found.\n";
+        exit(1);            
+    }
+    string RefPDFfile = std::string(cmssw_base).append("/src/hhAnalysis/Heavymassestimator/data/REFPDFPU40.root");//the root file contains histogram for weighting 
     
-    int iterations_ = 10000;
-    bool useMET_ = true;//use MET or totjets_p4 to estimate kinematic sum of two nuetrino
-    int bjetrescaleAlgo_ = 2;//jet correction
-    int metcorrection_ = 5;//met correction
+    int iterations = 100000;
+    bool useMET = true;//use MET or totjets_p4 to estimate kinematic sum of two nuetrino
+    int bjetrescaleAlgo = 2;//jet correction
+    int metcorrection = 5;//met correction
 
     float h2tohh_mass = 400.0;//signal benmark M=400, narrow width. in other word, HME output of all above events should be close to 400.0
     
@@ -164,18 +173,21 @@ int main(int argc, char *argv[])
 	evlist[ievent].print();
 	//boosted events with mass =1600 GeV
 	if (ievent >= 7 and ievent <=9 ){
-	    bjetrescaleAlgo_ = 0;
-	    metcorrection_ = 6;
+	    bjetrescaleAlgo = 0;
+	    metcorrection = 6;
 	    h2tohh_mass = 1600;
 	}
 
 
-	heavyMassEstimator *thishme = new heavyMassEstimator(&evlist[ievent].lep1_p4, &evlist[ievent].lep2_p4, &evlist[ievent].b1jet_p4, &evlist[ievent].b2jet_p4, &evlist[ievent].totjets_p4, &evlist[ievent].met_p4, 
-	    PUSample_, ievent, weightfromonshellnupt_func_, weightfromonshellnupt_hist_, weightfromonoffshellWmass_hist_,
-	    iterations_, RefPDFfile_, useMET_, bjetrescaleAlgo_, metcorrection_);
-	bool runheavyMassEstimatorok = thishme->runheavyMassEstimator();
+        heavyMassEstimator hme(PUSample, weightfromonshellnupt_func, weightfromonshellnupt_hist, weightfromonoffshellWmass_hist,
+	    iterations, RefPDFfile, useMET, bjetrescaleAlgo, metcorrection);
+        hme.set_inputs(evlist[ievent].lep1_p4, evlist[ievent].lep2_p4, 
+            evlist[ievent].b1jet_p4, evlist[ievent].b2jet_p4, 
+            evlist[ievent].totjets_p4, evlist[ievent].met_p4, 
+	    ievent);
+	bool runheavyMassEstimatorok = hme.runheavyMassEstimator();
 	if (runheavyMassEstimatorok) {
-	  //heavyMassEstimatortree =  (thishme->getheavyMassEstimatorTree())->CloneTree();
+	  //heavyMassEstimatortree =  (hme.getheavyMassEstimatorTree())->CloneTree();
 	    std::stringstream ss;
 	  ss <<"heavyMassEstimator_h2mass_event"<< ievent;
 	  const std::string histname(ss.str());
@@ -185,9 +197,9 @@ int main(int argc, char *argv[])
 	  std::stringstream ss4;
 	  ss4 <<"heavyMassEstimator_h2massweight4_event"<< ievent;
 	  const std::string histname4(ss4.str());
-	  TH1F* heavyMassEstimator_h2mass =(TH1F*)(thishme->getheavyMassEstimatorh2()).Clone(histname.c_str());
-	  TH1F* heavyMassEstimator_h2mass_weight1 =(TH1F*)(thishme->getheavyMassEstimatorh2weight1()).Clone(histname1.c_str());
-	  TH1F* heavyMassEstimator_h2mass_weight4 =(TH1F*)(thishme->getheavyMassEstimatorh2weight4()).Clone(histname4.c_str());
+	  TH1F* heavyMassEstimator_h2mass =(TH1F*)(hme.getheavyMassEstimatorh2()).Clone(histname.c_str());
+	  TH1F* heavyMassEstimator_h2mass_weight1 =(TH1F*)(hme.getheavyMassEstimatorh2weight1()).Clone(histname1.c_str());
+	  TH1F* heavyMassEstimator_h2mass_weight4 =(TH1F*)(hme.getheavyMassEstimatorh2weight4()).Clone(histname4.c_str());
 	  //std::cout <<" Mass_h2mass in Analyzer " << std::endl;
 	  float heavyMassEstimator_h2mass_prob = (heavyMassEstimator_h2mass->GetXaxis())->GetBinCenter(heavyMassEstimator_h2mass->GetMaximumBin());
 	  float heavyMassEstimator_h2massweight1_prob = (heavyMassEstimator_h2mass_weight1->GetXaxis())->GetBinCenter(heavyMassEstimator_h2mass_weight1->GetMaximumBin());
@@ -215,11 +227,9 @@ int main(int argc, char *argv[])
 		heavyMassEstimator_h2mass_weight1->Print("ALL");
 	  }
 	      //##!! NOT ALL HISTOS 
-	      //if (keepheavyMassEstimatorhist_)
+	      //if (keepheavyMassEstimatorhist)
 	      //	file->WriteObject(heavyMassEstimator_h2mass, histname.c_str());
 	}//runheavyMassEstimatorok
-	delete thishme;
-
     }
     std::cout << std::endl;
     std::cout << "*****************************************************************************************************************************************" << std::endl;
