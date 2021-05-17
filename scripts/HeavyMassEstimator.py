@@ -155,22 +155,22 @@ class HeavyMassEstimator(object):
 	    self.recobjetrescalec1pdf_flag = False
 
 
-		
+        minMass = 200.0;  maxMass = 3600.0; nbinsMass = 3400		
 	self.debug = False
-        self.hme_h2Mass = ROOT.TH1F("hme_h2Mass","h2 mass from HME",1000, 200.0,1200.0)
-        self.hme_h2Mass_divSolutions = ROOT.TH1F("hme_h2Mass_divSolutions", "h2 mass from HME / nSolutions", 1000, 200.0, 1200.0)
-        self.hme_h2Mass_correctmunupair = ROOT.TH1F("hme_h2Mass_correctmunupair","h2 mass from HME",1000, 200.0,1200.0)
-        self.hme_h2Mass_incorrectmunupair = ROOT.TH1F("hme_h2Mass_incorrectmunupair","h2 mass from HME",1000, 200.0,1200.0)
-	self.hme_h2MassWeight1 = ROOT.TH1F("hme_h2MassWeight1","h2 mass from HME",1000, 200.0,1200.0)
-	self.hme_h2MassWeight2 = ROOT.TH1F("hme_h2MassWeight2","h2 mass from HME",1000, 200.0,1200.0)
-	self.hme_h2MassWeight3 = ROOT.TH1F("hme_h2MassWeight3","h2 mass from HME",1000, 200.0,1200.0)
-	#self.hme_h2MassWeight4 = ROOT.TH1F("hme_h2MassWeight4","h2 mass from HME",1000, 200.0,1200.0)
+        self.hme_h2Mass = ROOT.TH1F("hme_h2Mass","h2 mass from HME", nbinsMass, minMass, maxMass)
+        self.hme_h2Mass_divSolutions = ROOT.TH1F("hme_h2Mass_divSolutions", "h2 mass from HME / nSolutions", nbinsMass, minMass, maxMass)
+        self.hme_h2Mass_correctmunupair = ROOT.TH1F("hme_h2Mass_correctmunupair","h2 mass from HME", nbinsMass, minMass, maxMass)
+        self.hme_h2Mass_incorrectmunupair = ROOT.TH1F("hme_h2Mass_incorrectmunupair","h2 mass from HME", nbinsMass, minMass, maxMass)
+	self.hme_h2MassWeight1 = ROOT.TH1F("hme_h2MassWeight1","h2 mass from HME", nbinsMass, minMass, maxMass)
+	self.hme_h2MassWeight2 = ROOT.TH1F("hme_h2MassWeight2","h2 mass from HME", nbinsMass, minMass, maxMass)
+	self.hme_h2MassWeight3 = ROOT.TH1F("hme_h2MassWeight3","h2 mass from HME", nbinsMass, minMass, maxMass)
+	#self.hme_h2MassWeight4 = ROOT.TH1F("hme_h2MassWeight4","h2 mass from HME",nbinsMass, minMass, maxMass)
 	self.hme_offshellWmass = ROOT.TH1F("hme_offshellWmass","offshell W mass from HME", 100, 0.0, 100.0)
 	### offshell Wmass(y-axis) Vs HME 
-	self.hme_h2MassAndoffshellWmass = ROOT.TH2F("hme_h2MassAndoffshellWmass","h2 Mass and offshell W mass from HME", 1000, 200.0, 1200.0, 100, 0.0, 100.0)
-	self.hme_h2MassAndoffshellWmass_correctmunupair = ROOT.TH2F("hme_h2MassAndoffshellWmass_correctmunupair","h2 Mass and offshell W mass from HME", 1000, 200.0, 1200.0, 100, 0.0, 100.0)
-	self.hme_h2MassAndoffshellWmass_weight1 = ROOT.TH2F("hme_h2MassAndoffshellWmass_weight1","h2 Mass and offshell W mass from HME", 1000, 200.0, 1200.0, 100, 0.0, 100.0)
-	self.hme_h2MassAndoffshellWmass_weight2 = ROOT.TH2F("hme_h2MassAndoffshellWmass_weight2","h2 Mass and offshell W mass from HME", 1000, 200.0, 1200.0, 100, 0.0, 100.0)
+	self.hme_h2MassAndoffshellWmass = ROOT.TH2F("hme_h2MassAndoffshellWmass","h2 Mass and offshell W mass from HME", nbinsMass, minMass, maxMass, 100, 0.0, 100.0)
+	self.hme_h2MassAndoffshellWmass_correctmunupair = ROOT.TH2F("hme_h2MassAndoffshellWmass_correctmunupair","h2 Mass and offshell W mass from HME", nbinsMass, minMass, maxMass, 100, 0.0, 100.0)
+	self.hme_h2MassAndoffshellWmass_weight1 = ROOT.TH2F("hme_h2MassAndoffshellWmass_weight1","h2 Mass and offshell W mass from HME", nbinsMass, minMass, maxMass, 100, 0.0, 100.0)
+	self.hme_h2MassAndoffshellWmass_weight2 = ROOT.TH2F("hme_h2MassAndoffshellWmass_weight2","h2 Mass and offshell W mass from HME", nbinsMass, minMass, maxMass, 100, 0.0, 100.0)
 
 	self.lepton1_p4  = ROOT.TLorentzVector()
 	self.lepton2_p4  = ROOT.TLorentzVector()
