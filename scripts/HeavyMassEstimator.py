@@ -320,7 +320,7 @@ class HeavyMassEstimator(object):
 	self.b1jet_eta[0] = -9.0; self.b1jet_phi[0] = -9.0; self.b1jet_pt[0] = -1.0; self.b1jet_energy[0] = -1.0
 	self.b2jet_eta[0] = -9.0; self.b2jet_phi[0] = -9.0; self.b2jet_pt[0] = -1.0; self.b2jet_energy[0] = -1.0
 	self.htoBB_eta[0] = -9.0; self.htoBB_phi[0] = -9.0; self.htoBB_pt[0] = -1.0; self.htoBB_energy[0] = -1.0; self.htoBB_mass[0] = -1.0
-	self.h2tohh_eta[0] = -9.0; self.h2tohh_phi[0] = -9.0; self.h2tohh_pt[0] = -1.0; self.h2tohh_energy[0] = -1.0; self.h2tohh_mass[0] = -1.0; self.h2tohh_mass_total[0] = -1.0
+	self.h2tohh_eta[0] = -9.0; self.h2tohh_phi[0] = -9.0; self.h2tohh_pt[0] = -1.0; self.h2tohh_energy[0] = -1.0; self.h2tohh_mass[0] = -1.0; self.h2tohh_mass_total[0] = 0.0
 	self.met_pt[0] = -1.0; self.met_px[0] = -99999.0; self.met_py[0] = -99999.0; self.met_phi[0] = -99999.0
 	self.weight[0] = 1.0; self.weight1[0] = 1.0;  self.weight2[0] = 1.0; self.weight3[0] = 1.0; self.weight4[0] = 1.0
 	self.b1rescalefactor[0] = 1.0; self.b2rescalefactor[0] = 1.0
@@ -640,7 +640,6 @@ class HeavyMassEstimator(object):
 
 
 		self.hme_h2Mass.Fill(self.h2tohh_mass[0], self.weight[0])
-                self.hme_h2Mass_divSolutions.Fill(self.h2tohh_mass_total[0]/self.nsolutions[0])
     		self.hme_offshellWmass.Fill(self.offshellW_mass[0], self.weight[0])
 
                 ########################################
@@ -673,6 +672,8 @@ class HeavyMassEstimator(object):
 
     		#self.hmetree.Fill()
 	 	isolution += 1 
+	    self.hme_h2Mass_divSolutions.Fill(self.h2tohh_mass_total[0]/self.nsolutions[0])
+	    #print("self.h2tohh_mass_total ", self.h2tohh_mass_total[0], " nsolutions ", self.nsolutions[0])
 	##### end of iteration
 
 
