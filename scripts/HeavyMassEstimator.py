@@ -155,7 +155,13 @@ class HeavyMassEstimator(object):
 	    self.recobjetrescalec1pdf_flag = False
 
 
-        minMass = 200.0;  maxMass = 3600.0; nbinsMass = 3400		
+        #PUSample: 25.2, PU0: 14.8
+        self.met_sigma = 25.2
+	self.met_covxx = 1.0; self.met_covyy = 1.0;  self.met_covxy = 0.0; ## by default, it is 
+	self.met_covcorrection = False;
+
+
+        minMass = 200.0;  maxMass = 4000.0; nbinsMass = 3800		
 	self.debug = False
         self.hme_h2Mass = ROOT.TH1F("hme_h2Mass","h2 mass from HME", nbinsMass, minMass, maxMass)
         self.hme_h2Mass_divSolutions = ROOT.TH1F("hme_h2Mass_divSolutions", "h2 mass from HME / nSolutions", nbinsMass, minMass, maxMass)
@@ -171,6 +177,8 @@ class HeavyMassEstimator(object):
 	self.hme_h2MassAndoffshellWmass_correctmunupair = ROOT.TH2F("hme_h2MassAndoffshellWmass_correctmunupair","h2 Mass and offshell W mass from HME", nbinsMass, minMass, maxMass, 100, 0.0, 100.0)
 	self.hme_h2MassAndoffshellWmass_weight1 = ROOT.TH2F("hme_h2MassAndoffshellWmass_weight1","h2 Mass and offshell W mass from HME", nbinsMass, minMass, maxMass, 100, 0.0, 100.0)
 	self.hme_h2MassAndoffshellWmass_weight2 = ROOT.TH2F("hme_h2MassAndoffshellWmass_weight2","h2 Mass and offshell W mass from HME", nbinsMass, minMass, maxMass, 100, 0.0, 100.0)
+	
+	self.hme_nsolutions = ROOT.TH1F("hme_nsolutions","num of solutions", 5, 0, 5.0)
 
 	self.lepton1_p4  = ROOT.TLorentzVector()
 	self.lepton2_p4  = ROOT.TLorentzVector()
@@ -259,6 +267,18 @@ class HeavyMassEstimator(object):
 
     def setIterations(self, n):
 	self.iterations = int(n)
+    def setMETResolution(self, x):
+	##if not set, then use the default value!
+        #PUSample: 25.2, PU0: 14.8
+	print("Setting the MET resolution to be: ", x, " the default is ",self.met_sigma)
+        self.met_sigma = x 
+
+    def setMETCovMatrix(self, covxx, covyy, covxy, covcorrection):
+	self.met_covxx = covxx
+	self.met_covyy = covyy
+	self.met_covxy = covxy
+	self.met_covcorrection = covcorrection ## True or False
+	print("Setting MET CovMatrix to correct MET: covxx ", covxx," covxy ", covxy, " covyy ", covyy)
 
     def setKinematic(self, lepton1_p4, lepton2_p4, jet1_p4, jet2_p4, met, onshellW_mu):
 	self.lepton1_p4 = lepton1_p4
@@ -419,7 +439,33 @@ class HeavyMassEstimator(object):
 	metpx_tmp = - (self.b1rescalefactor[0] - 1.0)*self.b1jet_p4.Px() - (self.b2rescalefactor[0] - 1.0)*self.b2jet_p4.Px()
 	metpy_tmp = - (self.b1rescalefactor[0] - 1.0)*self.b1jet_p4.Py() - (self.b2rescalefactor[0] - 1.0)*self.b2jet_p4.Py()
 	return ROOT.TVector2(metpx_tmp, metpy_tmp)
+
+    def metSmearing_Cov(self, metx, mety, covxx, covyy, covxy, Niter):
+	##reference: https://juanitorduz.github.io/multivariate_normal/
+	d = 2
+	mean = np.array([metx, mety]).reshape(2,1)
+	covmatrix = np.array([[covxx, covxy], [covxy, covyy]])
+
+	np.linalg.eigvals(covmatrix)
+
+	epsilon = 0.01
+
+
+	K = covmatrix + epsilon*np.identity(d)
+	L = np.linalg.cholesky(K)
+	testK = np.dot(L, np.transpose(L))
+	print("K ", K, " testK ", testK)
+
+	#Niter = 100
+	u = np.random.normal(loc=0, scale=1, size=d*Niter).reshape(d, Niter)
+	dx = np.dot(L, u)## met after smearing with covariant method
+
+
+	for i in range(Niter):
+		print("x : ", dx[0][i]," y: ", dx[1][i])
     
+	return dx
+
     def assignMuP4(self, case):
 	"""lepton+nu permutation
 	    in simulation:
@@ -447,6 +493,7 @@ class HeavyMassEstimator(object):
 	deta = nu_eta-lepton_p4.Eta()
 	dphi = nu_phi-lepton_p4.Phi()
 	nuPt = wMass*wMass/(2*lepton_p4.Pt()*(cosh(deta)-cos(dphi)))
+	#nuPt = wMass*wMass/(2*lepton_p4.Pt()*(cosh(deta)-cosh(dphi)))
 
         return nuPt
 
@@ -496,11 +543,14 @@ class HeavyMassEstimator(object):
 	it = 0
 	genRandom = ROOT.TRandom3(0)
 	boosted_flg = (self.b1jet_p4 == None and self.b2jet_p4 == None and self.dijet_p4 != None)
-        #PUSample: 25.2, PU0: 14.8
-        met_sigma = 25.2
         if not self.recobjetrescalec1pdf_flag and  not boosted_flg:
 	    if self.debug:	print "self.recobjetrescalec1pdf_flag is False! and not boosted topology"
-	    met_sigma = 0.0	
+	    self.met_sigma = 0.0	
+	
+	hme_binwidth = self.hme_h2Mass.GetBinWidth(1)
+        dxy_covcorrection = None
+        if self.met_covcorrection:
+	     dxy_covcorrection = self.metSmearing_Cov(self.met_px[0], self.met_py[0], self.met_covxx, self.met_covyy, self.met_covxy, self.iterations)
         #genRandom.SetSeed()
 	while (it < self.iterations ):
 	    it += 1
@@ -514,8 +564,14 @@ class HeavyMassEstimator(object):
 	    if self.debug:
 		print "it ",it," self.eta_gen[0] ",self.eta_gen[0]," wmass_gen ",self.wmass_gen[0]
 	    #smearing met 
-	    met_dpx = genRandom.Gaus(0.0, met_sigma)
-	    met_dpy = genRandom.Gaus(0.0, met_sigma)
+            met_dpx = None; met_dpy = None
+	    if self.met_covcorrection:
+	        met_dpx = dxy_covcorrection[0][it]
+	        met_dpy = dxy_covcorrection[1][it]
+	    else:
+		met_dpx = genRandom.Gaus(0.0, self.met_sigma)
+		met_dpy = genRandom.Gaus(0.0, self.met_sigma)
+
             if boosted_flg:
 	        self.bjetsCorrection_dijet()
 		met_corr = self.met + ROOT.TVector2(met_dpx, met_dpy)+ self.metCorrection_dijet()
@@ -542,6 +598,8 @@ class HeavyMassEstimator(object):
 	    self.nsolutions[0] = 0
 	    isolution = 0
 	    solutions = [False, False, False, False]
+	    hme_values = [-1.0, -1.0, -1.0, -1.0]
+	    trueweights = [1.0, 1.0, 1.0, 1.0]
 	    #1. permutation 
 	    #2. check nu_onshell_W pt
 	    #3. solve the kinematics
@@ -640,6 +698,17 @@ class HeavyMassEstimator(object):
 
 
 		self.hme_h2Mass.Fill(self.h2tohh_mass[0], self.weight[0])
+		hme_values[isolution] = self.h2tohh_mass[0]
+		N_solution_withinOnebin = 0
+		ii = 0; jj=0
+		while ii < isolution:
+		    if fabs(self.h2tohh_mass[0] - hme_values[ii]) <= hme_binwidth: N_solution_withinOnebin += 1
+		    ii += 1
+		trueweight_this = 1.0/(N_solution_withinOnebin+1.0)
+		while jj <= isolution:
+		    if fabs(self.h2tohh_mass[0] - hme_values[jj]) <= hme_binwidth: trueweights[jj] = trueweight_this
+		    jj += 1
+		        
     		self.hme_offshellWmass.Fill(self.offshellW_mass[0], self.weight[0])
 
                 ########################################
@@ -673,6 +742,18 @@ class HeavyMassEstimator(object):
     		#self.hmetree.Fill()
 	 	isolution += 1 
 	    self.hme_h2Mass_divSolutions.Fill(self.h2tohh_mass_total[0]/self.nsolutions[0])
+            self.hme_nsolutions.Fill(self.nsolutions[0]+0.5)
+            #################################################################
+            ## the following apply the reco mass dependent weight to each solution
+            #################################################################
+            #isolution = 0
+	    #while isolution < len(solutions):
+	    #    if not(solutions[isolution]):	
+	    #        isolution += 1
+	    #        continue
+	    #    self.hme_h2Mass.Fill(hme_values[isolution], trueweights[isolution])
+	    #    isolution += 1 
+            #print("hme_values ", hme_values, " trueweights ", trueweights)
 	    #print("self.h2tohh_mass_total ", self.h2tohh_mass_total[0], " nsolutions ", self.nsolutions[0])
 	##### end of iteration
 
