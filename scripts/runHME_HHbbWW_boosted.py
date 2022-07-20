@@ -19,14 +19,40 @@ if args.infile == None:
   print("No input file given")
   sys.exit("Use 'python runHME_HHbbWW_v2.py -i <inputFile> -o <outputFile>'")
 
+
+metRes = None
+per_weight_gravitycenter = 0.18
+
+def get_gravity_center(th1, percent):
+    ##get the gravity center(aka weight average) around peak
+    if th1.GetEntries() == 0:
+        return 0.0
+    binwidth = th1.GetBinWidth(1)
+    bin_max = th1.GetMaximumBin()
+    bin_max_center = th1.GetXaxis().GetBinCenter(th1.GetMaximumBin())
+    nbins_gravity = int(bin_max_center*percent/binwidth/2.0)
+    total_weightedEntries = th1.GetBinContent(bin_max) * bin_max_center
+    total_entries = th1.GetBinContent(bin_max) 
+    for i in range(1, nbins_gravity+1):
+	if bin_max - i >0:
+	    total_weightedEntries += th1.GetBinContent(bin_max - i) * th1.GetBinCenter(bin_max - i)
+	    total_entries += th1.GetBinContent(bin_max - i)
+	if bin_max + i <= th1.GetNbinsX():
+	    total_weightedEntries += th1.GetBinContent(bin_max + i) * th1.GetBinCenter(bin_max + i)
+	    total_entries += th1.GetBinContent(bin_max + i)
+    if total_entries == 0:
+        return 0.0
+    weighted_average = total_weightedEntries/total_entries
+    print("percent ", percent, " nbins for gravity on each side ", nbins_gravity, " max bin ",bin_max," most probable mass ", bin_max_center, " total_entries ", total_entries, " weighted sum ", total_weightedEntries, " New weighted probable mass ", weighted_average)
+    return weighted_average
+
 chain = ROOT.TChain("Events")
 chain.Add(args.infile)
 TotalEv = chain.GetEntries()
 
 out = ROOT.TFile(args.outfile, 'recreate')
 out.cd()
-tree = chain.CloneTree(10)
-
+tree = chain.CloneTree(0)
 
 iterations = args.iterations
 nStart = args.nStart
@@ -38,6 +64,7 @@ if nStart >= nEnd:
 print("Total events = ", TotalEv, " nStart ", nStart, " nEnd ", nEnd, " iteration for HME ", iterations)
 
 hme_mass_peak = array('f', [0.])
+hme_mass_peak_gravity = array('f', [0.])
 hme_mass_peak_divSol = array('f', [0.])
 hme_mass_peak_boosted = array('f', [0.])
 hme_mass_peak_boosted_divSol = array('f', [0.])
@@ -48,6 +75,7 @@ nsolution3 = array('f', [0.0])
 nsolution4 = array('f', [0.0])
 
 massBranch = tree.Branch("hme_mass_peak", hme_mass_peak, "hme_mass_peak/F")
+massBranch_gravity = tree.Branch("hme_mass_peak_gravity", hme_mass_peak_gravity, "hme_mass_peak_gravity/F")
 massBranch_divSol = tree.Branch("hme_mass_peak_divSol", hme_mass_peak_divSol, "hme_mass_peak_divSol/F")
 massBranch_boosted = tree.Branch("hme_mass_peak_boosted", hme_mass_peak_boosted, "hme_mass_peak_boosted/F")
 massBranch_boosted_divSol = tree.Branch("hme_mass_peak_boosted_divSol", hme_mass_peak_boosted_divSol, "hme_mass_peak_boosted_divSol/F")
@@ -85,47 +113,43 @@ for nEv in range(nStart, nEnd):
   jet1_p4.SetPxPyPzE(chain.fatbjet_subjet1_Px,   chain.fatbjet_subjet1_Py,    chain.fatbjet_subjet1_Pz,    chain.fatbjet_subjet1_E)
   jet2_p4.SetPxPyPzE(chain.fatbjet_subjet2_Px,   chain.fatbjet_subjet2_Py,    chain.fatbjet_subjet2_Pz,    chain.fatbjet_subjet2_E)
   dijet_p4.SetPxPyPzE(chain.fatbjet_Px,   chain.fatbjet_Py,    chain.fatbjet_Pz,    chain.fatbjet_E)
+  met_vec2.Set(chain.met_Px, chain.met_Py)
   #dijet_p4 = jet1_p4 + jet2_p4
   #met_vec2.SetMagPhi(chain.MET_pt_nom, chain.MET_phi_nom)
-  met_vec2.Set(chain.met_Px, chain.met_Py)
 
 
+  ##HME uses two leptons, two jets, MET as inputs
   hme = HeavyMassEstimator()
-  hme_boosted = HeavyMassEstimator()
+  hme.hme_h2Mass.Rebin(nbins_rebin)
   hme.setKinematic(lep1_p4, lep2_p4, jet1_p4, jet2_p4, met_vec2, 0)
   hme.showKinematic()
   hme.setIterations(iterations)
+  if metRes != None:
+      hme.setMETResolution(metRes)
   hme.runHME()
-  hme.hme_h2Mass.Rebin(nbins_rebin)
   hme_mass_peak[0] = hme.hme_h2Mass.GetXaxis().GetBinCenter(hme.hme_h2Mass.GetMaximumBin())
+  hme_mass_peak_gravity[0] = get_gravity_center(hme.hme_h2Mass, per_weight_gravitycenter)
   hme_mass_peak_divSol[0] = hme.hme_h2Mass_divSolutions.GetXaxis().GetBinCenter(hme.hme_h2Mass_divSolutions.GetMaximumBin())
   nsolution0[0] = hme.hme_nsolutions.GetBinContent(1)
   nsolution1[0] = hme.hme_nsolutions.GetBinContent(2)
   nsolution2[0] = hme.hme_nsolutions.GetBinContent(3)
   nsolution3[0] = hme.hme_nsolutions.GetBinContent(4)
   nsolution4[0] = hme.hme_nsolutions.GetBinContent(5)
-  print("hme gave max mass = ", hme_mass_peak[0]," bincontent 3 ",hme.hme_nsolutions.GetBinContent(3)," nsolution2[0] ",nsolution2[0])
-  #hme.hme_nsolutions.Print("ALL")
+  print("hme gave max mass = ", hme_mass_peak[0]," bincontent 3 ",hme.hme_nsolutions.GetBinContent(3)," nsolution2[0] ",nsolution2[0]," weighted center  ", hme_mass_peak_gravity[0])
 
+  ##HME uses two leptons, dijet, MET as inputs, later this is proven to be less efficient
   hme_boosted = HeavyMassEstimator()
+  hme_boosted.hme_h2Mass.Rebin(nbins_rebin)
   hme_boosted.setKinematic_boosted(lep1_p4, lep2_p4, dijet_p4, met_vec2, 0.0)
   hme_boosted.showKinematic()
   hme_boosted.setIterations(iterations)
+  if metRes != None:
+      hme_boosted.setMETResolution(metRes)
   hme_boosted.runHME()
-  hme_boosted.hme_h2Mass.Rebin(nbins_rebin)
   hme_mass_peak_boosted[0] = hme_boosted.hme_h2Mass.GetXaxis().GetBinCenter(hme_boosted.hme_h2Mass.GetMaximumBin())
   hme_mass_peak_boosted_divSol[0] = hme_boosted.hme_h2Mass_divSolutions.GetXaxis().GetBinCenter(hme_boosted.hme_h2Mass_divSolutions.GetMaximumBin())
   print("hme boosted gave max mass = ", hme_mass_peak_boosted[0])
 
-  #massBranch.Fill()
-  #massBranch_divSol.Fill()
-  #massBranch_boosted.Fill()
-  #massBranch_boosted_divSol.Fill()
-  #br_nsolution0.Fill()
-  #br_nsolution1.Fill()
-  #br_nsolution2.Fill()
-  #br_nsolution3.Fill()
-  #br_nsolution4.Fill()
   tree.Fill()
 
 tree.Write()

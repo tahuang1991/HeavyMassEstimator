@@ -43,3 +43,5 @@ set1Dhist(offshellWmasspdf, offshellWmass_y)
 set1Dhist(onshellnuptpdf, onshellnupt_y)
 set1Dhist(recobjetrescalec1pdfPU40, recobjetrescalec1pdfPU40_y)
 set1Dhist(recobjetrescalec1pdfPU40_boosted, recobjetrescalec1pdfPU40_boosted_y)
+
+#recobjetrescalec1pdfPU40_boosted.Print("ALL")

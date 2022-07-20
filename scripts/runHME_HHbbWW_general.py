@@ -89,7 +89,7 @@ for nEv in range(nStart, nEnd):
   hme_mass_peak_divSol[0] = hme.hme_h2Mass_divSolutions.GetXaxis().GetBinCenter(hme.hme_h2Mass_divSolutions.GetMaximumBin())
   print("ievent ", nEv," hme gave max mass = ", hme_mass_peak[0])
 
-  ## HME inputs with two leptons, dijets, met
+  ##HME uses two leptons, dijet, MET as inputs, later this is proven to be less efficient
   #dijet_p4 = jet1_p4 + jet2_p4
   #hme_boosted = HeavyMassEstimator()
   #hme_boosted.setKinematic_boosted(lep1_p4, lep2_p4, dijet_p4, met_vec2, 0.0)
