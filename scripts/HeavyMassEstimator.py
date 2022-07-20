@@ -680,7 +680,7 @@ class HeavyMassEstimator(object):
                 self.h2tohh_mass_total[0] += self.h2tohh_mass[0]
 
                 ##check the offshell Wmass and h->WW mass.
-                if (self.offshellW_mass[0]>self.htoWW_mass[0]/2.0):
+                if (self.offshellW_mass[0]>self.htoWW_mass[0]/2.0 or self.offshellW_mass[0] > self.onshellW_mass[0]):
                     #print("self.htoWW_mass[0] ",self.htoWW_mass[0]," self.offshellW_mass[0] ",self.offshellW_mass[0]," weight from offshellW mass ",self.weight2[0]," onshell wmass ", self.onshellW_mass[0])
                     isolution += 1
                     continue
