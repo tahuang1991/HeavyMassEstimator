@@ -22,7 +22,7 @@ def set1Dhist(hist, ylist):
     nbins = hist.GetNbinsX()
     for i in range(1, nbins+1):
         hist.SetBinContent(i, ylist[i-1])
-    #print " hist ",hist.GetName(),hist.Print("ALL")
+    #print(" hist ",hist.GetName(),hist.Print("ALL"))
 #readIn1Dhist(onshellWmasspdf)
 #readIn1Dhist(offshellWmasspdf)
 #readIn1Dhist(onshellnuptpdf)

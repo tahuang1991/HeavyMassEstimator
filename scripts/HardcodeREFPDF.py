@@ -12,15 +12,15 @@ def readIn1Dhist(hist):
     nbins = hist.GetNbinsX()
     bincontents = []
     for i in range(1, nbins+1):
-	bincontents.append(hist.GetBinContent(i))
-    print " hist ",hist.GetName()," bincontents ", bincontents,"\n"
+        bincontents.append(hist.GetBinContent(i))
+    print(" hist ",hist.GetName()," bincontents ", bincontents,"\n")
 
 def set1Dhist(hist, ylist):
     nbins = hist.GetNbinsX()
     for i in range(1, nbins+1):
-	hist.SetBinContent(i, ylist[i-1])
+        hist.SetBinContent(i, ylist[i-1])
     
-    #print " hist ",hist.GetName(),hist.Print("ALL")
+    #print(" hist ",hist.GetName(),hist.Print("ALL"))
 #readIn1Dhist(onshellWmasspdf)
 #readIn1Dhist(offshellWmasspdf)
 #readIn1Dhist(onshellnuptpdf)
