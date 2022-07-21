@@ -21,7 +21,7 @@ parser.add_argument("-nEnd", "--nEnd", dest="nEnd", type=int, default=-1, help="
 #args = parser.parse_args()
 args, unknown = parser.parse_known_args()
 
-if args.infile == None:
+if args.infile == None or not(os.path.isfile(args.infile)):
   print("No input file given")
   sys.exit("Use 'python runHME_HHbbWW_v2.py -i <inputFile> -o <outputFile>'")
 
@@ -53,9 +53,9 @@ def initBranches():
   hme_mass_peak_boosted[0] = 0.0
   hme_mass_peak_boosted_divSol[0] = 0.0
 
-massBranch = tree.Branch("hme_mass_peak", hme_mass_peak, "hme_mass_peak/F")
-massBranch_divSol = tree.Branch("hme_mass_peak_divSol", hme_mass_peak_divSol, "hme_mass_peak_divSol/F")
-#massBranch_boosted = tree.Branch("hme_mass_peak_boosted", hme_mass_peak_boosted, "hme_mass_peak_boosted/F")
+massBranch                = tree.Branch("hme_mass_peak", hme_mass_peak, "hme_mass_peak/F")
+massBranch_divSol         = tree.Branch("hme_mass_peak_divSol", hme_mass_peak_divSol, "hme_mass_peak_divSol/F")
+#massBranch_boosted        = tree.Branch("hme_mass_peak_boosted", hme_mass_peak_boosted, "hme_mass_peak_boosted/F")
 #massBranch_boosted_divSol = tree.Branch("hme_mass_peak_boosted_divSol", hme_mass_peak_boosted_divSol, "hme_mass_peak_boosted_divSol/F")
 
 for nEv in range(nStart, nEnd):
@@ -82,11 +82,13 @@ for nEv in range(nStart, nEnd):
 
   hme = HeavyMassEstimator()
   hme.setKinematic(lep1_p4, lep2_p4, jet1_p4, jet2_p4, met_vec2, 0)
-  hme.showKinematic()
+  #hme.showKinematic()
   hme.setIterations(iterations)
   hme.runHME()
-  hme_mass_peak[0] = hme.hme_h2Mass.GetXaxis().GetBinCenter(hme.hme_h2Mass.GetMaximumBin())
-  hme_mass_peak_divSol[0] = hme.hme_h2Mass_divSolutions.GetXaxis().GetBinCenter(hme.hme_h2Mass_divSolutions.GetMaximumBin())
+  if hme.hme_h2Mass.GetEntries() >0:
+      ##fill TTree if it return valid HME value, otherwise fill 0.0
+      hme_mass_peak[0] = hme.hme_h2Mass.GetXaxis().GetBinCenter(hme.hme_h2Mass.GetMaximumBin())
+      hme_mass_peak_divSol[0] = hme.hme_h2Mass_divSolutions.GetXaxis().GetBinCenter(hme.hme_h2Mass_divSolutions.GetMaximumBin())
   print("ievent ", nEv," hme gave max mass = ", hme_mass_peak[0])
 
   ##HME uses two leptons, dijet, MET as inputs, later this is proven to be less efficient
@@ -96,14 +98,12 @@ for nEv in range(nStart, nEnd):
   #hme_boosted.showKinematic()
   #hme_boosted.setIterations(iterations)
   #hme_boosted.runHME()
-  #hme_mass_peak_boosted[0] = hme_boosted.hme_h2Mass.GetXaxis().GetBinCenter(hme_boosted.hme_h2Mass.GetMaximumBin())
-  #hme_mass_peak_boosted_divSol[0] = hme_boosted.hme_h2Mass_divSolutions.GetXaxis().GetBinCenter(hme_boosted.hme_h2Mass_divSolutions.GetMaximumBin())
+  #if hme_boosted.hme_h2Mass.GetEntries() >0:
+      ##fill TTree if it return valid HME value, otherwise fill 0.0
+      #hme_mass_peak_boosted[0] = hme_boosted.hme_h2Mass.GetXaxis().GetBinCenter(hme_boosted.hme_h2Mass.GetMaximumBin())
+      #hme_mass_peak_boosted_divSol[0] = hme_boosted.hme_h2Mass_divSolutions.GetXaxis().GetBinCenter(hme_boosted.hme_h2Mass_divSolutions.GetMaximumBin())
   #print("hme boosted(with dijet as input) gave max mass = ", hme_boosted_maxMass)
 
-  #massBranch.Fill()
-  #massBranch_divSol.Fill()
-  #massBranch_boosted.Fill()
-  #massBranch_boosted_divSol.Fill()
   tree.Fill() 
 
 tree.Write()
