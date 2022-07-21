@@ -318,7 +318,7 @@ class HeavyMassEstimator(object):
         K = covmatrix + epsilon*np.identity(d)
         L = np.linalg.cholesky(K)
         testK = np.dot(L, np.transpose(L))
-        print("K ", K, " testK ", testK)
+        #print("K ", K, " testK ", testK)
 
         if seed > 0:
             np.random.seed(seed)
@@ -326,8 +326,8 @@ class HeavyMassEstimator(object):
         dx = np.dot(L, u)## met after smearing with covariant method
 
 
-        for i in range(Niter):
-            print("x : ", dx[0][i]," y: ", dx[1][i])
+        #for i in range(Niter):
+        #    print("x : ", dx[0][i]," y: ", dx[1][i])
         
         return dx
     

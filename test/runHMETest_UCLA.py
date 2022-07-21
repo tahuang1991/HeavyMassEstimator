@@ -12,6 +12,7 @@ sys.argv.append( '-q' )
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
+sys.path.append(os.path.join(os.path.abspath('..'), 'python'))
 from HeavyMassEstimator import *
 
 doTest = False

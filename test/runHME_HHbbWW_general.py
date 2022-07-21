@@ -10,6 +10,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 sys.argv.append( '-b' )
 sys.argv.append( '-q' )
 
+sys.path.append(os.path.join(os.path.abspath('..'), 'python'))
 from HeavyMassEstimator import *
 
 parser = argparse.ArgumentParser(description='runHME')
