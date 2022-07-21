@@ -589,8 +589,6 @@ class HeavyMassEstimator(object):
 
             self.metpx_corr[0] = met_corr.Px()
             self.metpy_corr[0] = met_corr.Py()
-            print("met smear x ", met_dpx, " y ", met_dpy)
-            print("met_px ",self.met.Px()," met_py ",self.met.Py()," after correction px ",met_corr.Px()," py ",met_corr.Py())
             if self.debug:
                 print("met_px ",self.met.Px()," met_py ",self.met.Py()," after correction px ",met_corr.Px()," py ",met_corr.Py())
             self.nsolutions[0] = 0
