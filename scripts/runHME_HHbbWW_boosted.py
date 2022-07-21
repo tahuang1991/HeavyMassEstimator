@@ -43,18 +43,18 @@ def get_gravity_center(th1, percent):
     total_weightedEntries = th1.GetBinContent(bin_max) * bin_max_center
     total_entries = th1.GetBinContent(bin_max) 
     for i in range(1, nbins_gravity+1):
-	if bin_max - i >0:
-	    total_weightedEntries += th1.GetBinContent(bin_max - i) * th1.GetBinCenter(bin_max - i)
-	    total_entries += th1.GetBinContent(bin_max - i)
-	if bin_max + i <= th1.GetNbinsX():
-	    total_weightedEntries += th1.GetBinContent(bin_max + i) * th1.GetBinCenter(bin_max + i)
-	    total_entries += th1.GetBinContent(bin_max + i)
+      if bin_max - i >0:
+        total_weightedEntries += th1.GetBinContent(bin_max - i) * th1.GetBinCenter(bin_max - i)
+        total_entries += th1.GetBinContent(bin_max - i)
+      if bin_max + i <= th1.GetNbinsX():
+        total_weightedEntries += th1.GetBinContent(bin_max + i) * th1.GetBinCenter(bin_max + i)
+        total_entries += th1.GetBinContent(bin_max + i)
     if total_entries == 0:
         return bin_max_center
     weighted_average = total_weightedEntries/total_entries
 
     if (bin_max_center - 250)*(weighted_average - 250) < 0.0:
-	print("percent ", percent, " nbins for gravity on each side ", nbins_gravity, " max bin ",bin_max," most probable mass ", bin_max_center, " total_entries ", total_entries, " weighted sum ", total_weightedEntries, " New weighted probable mass ", weighted_average)
+      print("percent ", percent, " nbins for gravity on each side ", nbins_gravity, " max bin ",bin_max," most probable mass ", bin_max_center, " total_entries ", total_entries, " weighted sum ", total_weightedEntries, " New weighted probable mass ", weighted_average)
     return weighted_average
 
 chain = ROOT.TChain("Events")
@@ -131,6 +131,7 @@ for nEv in range(nStart, nEnd):
   hme.setKinematic(lep1_p4, lep2_p4, jet1_p4, jet2_p4, met_vec2, 0)
   #hme.showKinematic()
   hme.setIterations(iterations)
+  ##hme.setMETCovMatrix(50.0, 40.0, 30.0, True) ## example to use MET cov smearing. met_covxx/covyy/covxy taken from events
   if metRes != None:
       hme.setMETResolution(metRes)
   hme.runHME()
@@ -139,7 +140,7 @@ for nEv in range(nStart, nEnd):
       ##fill TTree if it return valid HME value, otherwise fill 0.0
       hme_mass_peak[0] = hme.hme_h2Mass.GetXaxis().GetBinCenter(hme.hme_h2Mass.GetMaximumBin())
       hme_mass_peak_divSol[0] = hme.hme_h2Mass_divSolutions.GetXaxis().GetBinCenter(hme.hme_h2Mass_divSolutions.GetMaximumBin())
-      hme.hme_h2Mass.Rebin(nbins_rebin); binwidth = hme.hme_h2Mass.GetBinWidth(1)
+      hme.hme_h2Mass.Rebin(nbins_rebin) 
       hme_mass_peak_gravity[0] = get_gravity_center(hme.hme_h2Mass, per_weight_gravitycenter)
       nsolution0[0] = hme.hme_nsolutions.GetBinContent(1)
       nsolution1[0] = hme.hme_nsolutions.GetBinContent(2)
@@ -147,6 +148,7 @@ for nEv in range(nStart, nEnd):
       nsolution3[0] = hme.hme_nsolutions.GetBinContent(4)
       nsolution4[0] = hme.hme_nsolutions.GetBinContent(5)
 
+  binwidth = hme.hme_h2Mass.GetBinWidth(1)
   print("ievent ", nEv," hme gave max mass = ", hme_mass_peak[0]," nsolution2[0] ",nsolution2[0]," weighted center  ", hme_mass_peak_gravity[0]," binwidth ",binwidth)
 
   ##HME uses two leptons, dijet, MET as inputs, later this is proven to be less efficient

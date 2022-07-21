@@ -266,6 +266,7 @@ class HeavyMassEstimator(object):
 
     def setIterations(self, n):
         self.iterations = int(n)
+
     def setMETResolution(self, x):
     ##if not set, then use the default value!
     #default PUSample: 25.2, PU0: 14.8
@@ -436,7 +437,7 @@ class HeavyMassEstimator(object):
         metpy_tmp = - (self.b1rescalefactor[0] - 1.0)*self.b1jet_p4.Py() - (self.b2rescalefactor[0] - 1.0)*self.b2jet_p4.Py()
         return ROOT.TVector2(metpx_tmp, metpy_tmp)
 
-    def metSmearing_Cov(self, metx, mety, covxx, covyy, covxy, Niter):
+    def metSmearing_Cov(self, metx, mety, covxx, covyy, covxy, Niter, seed=-1):
         ##reference: https://juanitorduz.github.io/multivariate_normal/
         d = 2
         mean = np.array([metx, mety]).reshape(2,1)
@@ -450,15 +451,16 @@ class HeavyMassEstimator(object):
         K = covmatrix + epsilon*np.identity(d)
         L = np.linalg.cholesky(K)
         testK = np.dot(L, np.transpose(L))
-        print("K ", K, " testK ", testK)
+        #print("K ", K, " testK ", testK)
 
         #Niter = 100
+        if seed > 0:
+            np.random.seed(seed)
         u = np.random.normal(loc=0, scale=1, size=d*Niter).reshape(d, Niter)
         dx = np.dot(L, u)## met after smearing with covariant method
 
-
-        for i in range(Niter):
-            print("x : ", dx[0][i]," y: ", dx[1][i])
+        #for i in range(Niter):
+        #    print("x : ", dx[0][i]," y: ", dx[1][i])
         
         return dx
 
@@ -545,8 +547,6 @@ class HeavyMassEstimator(object):
         
         hme_binwidth = self.hme_h2Mass.GetBinWidth(1)
         dxy_covcorrection = None
-        if self.met_covcorrection:
-            dxy_covcorrection = self.metSmearing_Cov(self.met_px[0], self.met_py[0], self.met_covxx, self.met_covyy, self.met_covxy, self.iterations)
 
         #genRandom.SetSeed()
         while (it < self.iterations ):
@@ -563,8 +563,9 @@ class HeavyMassEstimator(object):
             #smearing met 
             met_dpx = None; met_dpy = None
             if self.met_covcorrection:
-                met_dpx = dxy_covcorrection[0][it]
-                met_dpy = dxy_covcorrection[1][it]
+                dxy_covcorrection = self.metSmearing_Cov(self.met_px[0], self.met_py[0], self.met_covxx, self.met_covyy, self.met_covxy, 1, it)
+                met_dpx = dxy_covcorrection[0][0]
+                met_dpy = dxy_covcorrection[1][0]
             else:
                 met_dpx = genRandom.Gaus(0.0, self.met_sigma)
                 met_dpy = genRandom.Gaus(0.0, self.met_sigma)
@@ -586,8 +587,10 @@ class HeavyMassEstimator(object):
                     self.b2rescalefactor[0] = 1.0
                 self.htoBB_p4 = self.b1jet_p4 * self.b1rescalefactor[0] + self.b2jet_p4 * self.b2rescalefactor[0]
 
-            self.metpx_corr[0]= met_corr.Px()
+            self.metpx_corr[0] = met_corr.Px()
             self.metpy_corr[0] = met_corr.Py()
+            print("met smear x ", met_dpx, " y ", met_dpy)
+            print("met_px ",self.met.Px()," met_py ",self.met.Py()," after correction px ",met_corr.Px()," py ",met_corr.Py())
             if self.debug:
                 print("met_px ",self.met.Px()," met_py ",self.met.Py()," after correction px ",met_corr.Px()," py ",met_corr.Py())
             self.nsolutions[0] = 0

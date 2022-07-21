@@ -1,15 +1,16 @@
 import ROOT
 import numpy as np
 from math import *
+import HardcodeREFPDF  as REFPDF
 
+print("missing parts for HeavyMassEstimatorHHZZbb: offshellZmasspdf and onshellZmasspdf for H->ZZ") 
 
 class HeavyMassEstimator(object):
-    """ Heavy  Mass Estimator 
+    """ Heavy  Mass Estimator for HH->ZZbb ->llvvbb
     Attributes: 
-    	two muons lorentz vectors
+        two muons lorentz vectors
         two bjet lorentz vectors 
         missing ET
-        root fils contains all PDFs
     hmetree should contain full information from  HME
     """
     iterations = 100
@@ -97,315 +98,378 @@ class HeavyMassEstimator(object):
 
 
     def __init__(self):
-	print "  create a HeavyMassEstimator object "
+        print("  create a HeavyMassEstimator object for HH->ZZbb ")
+        try:
+            self.onshellZmasspdf = REFPDF.onshellZmasspdf
+            self.onshellZmasspdf_flag = True
+        except NameError:
+            print("Failed to find onshellZmasspdf from hardcorded REFPDF")
+            self.onshellZmasspdf_flag = False
+
+        try:
+            self.offshellZmasspdf = REFPDF.offshellZmasspdf
+            self.offshellZmasspdf_flag = True
+        except NameError:
+            print("Failed to find offshellZmasspdf from hardcorded REFPDF")
+            self.offshellZmasspdf_flag = False
+        
+        try:
+            self.recobjetrescalec1pdf = REFPDF.recobjetrescalec1pdfPU40
+            self.recobjetrescalec1pdf_flag = True
+        except NameError:
+            print("Failed to find recobjetrescalec1pdf from hardcorded REFPDF")
+            self.recobjetrescalec1pdf_flag = False
+
         self.hme_h2Mass = ROOT.TH1F("hme_h2Mass","h2 mass from HME",1000, 200.0,1200.0)
-	self.hme_h2MassWeight1 = ROOT.TH1F("hme_h2MassWeight1","h2 mass from HME",1000, 200.0,1200.0)
-	self.hme_h2MassWeight4 = ROOT.TH1F("hme_h2MassWeight4","h2 mass from HME",1000, 200.0,1200.0)
+        self.hme_h2MassWeight1 = ROOT.TH1F("hme_h2MassWeight1","h2 mass from HME",1000, 200.0,1200.0)
+        self.hme_h2MassWeight4 = ROOT.TH1F("hme_h2MassWeight4","h2 mass from HME",1000, 200.0,1200.0)
 
-	self.dilepton_mass = np.zeros(1, dtype=float) 
-	self.lepton1_p4  = ROOT.TLorentzVector()
-	self.lepton2_p4  = ROOT.TLorentzVector()
+        self.dilepton_mass = np.zeros(1, dtype=float) 
+        self.lepton1_p4  = ROOT.TLorentzVector()
+        self.lepton2_p4  = ROOT.TLorentzVector()
         self.dilepton_p4 = ROOT.TLorentzVector()
-	self.b1jet_p4  = ROOT.TLorentzVector()
-	self.b2jet_p4  = ROOT.TLorentzVector()
-	self.met = ROOT.TVector2()
-	self.Zll_p4 = ROOT.TLorentzVector()
-	self.Znunu_p4 = ROOT.TLorentzVector()
-	self.htoZZ_p4 =  ROOT.TLorentzVector()
-	self.htoBB_p4 =  ROOT.TLorentzVector()
-	self.h2tohh_p4 = ROOT.TLorentzVector()
-	#print "self.hme_h2Mass entries ",self.hme_h2Mass.GetEntries()," hmetree entries ",self.hmetree.GetEntries()
-	#print "hme_h2MassWeight1 entries ",self.hme_h2MassWeight1.GetEntries()
-	
-
+        self.b1jet_p4  = ROOT.TLorentzVector()
+        self.b2jet_p4  = ROOT.TLorentzVector()
+        self.met = ROOT.TVector2()
+        self.Zll_p4 = ROOT.TLorentzVector()
+        self.Znunu_p4 = ROOT.TLorentzVector()
+        self.htoZZ_p4 =  ROOT.TLorentzVector()
+        self.htoBB_p4 =  ROOT.TLorentzVector()
+        self.h2tohh_p4 = ROOT.TLorentzVector()
+    
     def setIterations(self, n):
-	self.iterations = n
+        self.iterations = n
+
+    def setMETResolution(self, x):
+    ##if not set, then use the default value!
+    #default PUSample: 25.2, PU0: 14.8
+        print("Setting the MET resolution to be: ", x, " the default is ",self.met_sigma)
+        self.met_sigma = x 
+
+    def setMETCovMatrix(self, covxx, covyy, covxy, covcorrection):
+        self.met_covxx = covxx
+        self.met_covyy = covyy
+        self.met_covxy = covxy
+        self.met_covcorrection = covcorrection ## True or False
+        print("Setting MET CovMatrix to correct MET: covxx ", covxx," covxy ", covxy, " covyy ", covyy)
 
     def setKinematic(self, lepton1_p4, lepton2_p4, jet1_p4, jet2_p4, met):
-	self.lepton1_p4 = lepton1_p4
-	self.lepton2_p4 = lepton2_p4
-	self.b1jet_p4 = jet1_p4
-	self.b2jet_p4 = jet2_p4
-	self.met = met
-	self.dilepton_p4 = self.lepton1_p4 + self.lepton2_p4
-	self.lepton1_eta[0] = self.lepton1_p4.Eta(); self.lepton1_phi[0] = self.lepton1_p4.Phi(); self.lepton1_pt[0] = self.lepton1_p4.Pt();self.lepton1_energy[0] = self.lepton1_p4.Energy()
-	self.lepton2_eta[0] = self.lepton2_p4.Eta(); self.lepton2_phi[0] = self.lepton2_p4.Phi(); self.lepton2_pt[0] = self.lepton2_p4.Pt();self.lepton2_energy[0] = self.lepton2_p4.Energy()
-	
-	#self.RefPDFFileName = RefPDFFileName
-	#self.RefPDFFile = ROOT.TFile(RefPDFFileName,"READ")
-
+        self.lepton1_p4 = lepton1_p4
+        self.lepton2_p4 = lepton2_p4
+        self.b1jet_p4 = jet1_p4
+        self.b2jet_p4 = jet2_p4
+        self.met = met
+        self.dilepton_p4 = self.lepton1_p4 + self.lepton2_p4
+        self.lepton1_eta[0] = self.lepton1_p4.Eta(); self.lepton1_phi[0] = self.lepton1_p4.Phi(); self.lepton1_pt[0] = self.lepton1_p4.Pt();self.lepton1_energy[0] = self.lepton1_p4.Energy()
+        self.lepton2_eta[0] = self.lepton2_p4.Eta(); self.lepton2_phi[0] = self.lepton2_p4.Phi(); self.lepton2_pt[0] = self.lepton2_p4.Pt();self.lepton2_energy[0] = self.lepton2_p4.Energy()
+    
     def setonshellZmasspdf(self, hist):
-	self.onshellZmasspdf = hist
-	self.onshellZmasspdf_flag = True
+        self.onshellZmasspdf = hist
+        self.onshellZmasspdf_flag = True
     
     def setoffshellZmasspdf(self, hist):
-	self.offshellZmasspdf = hist
-	self.offshellZmasspdf_flag = True
+        self.offshellZmasspdf = hist
+        self.offshellZmasspdf_flag = True
     
     def setrecobjetrescalec1pdf(self, hist):
-	self.recobjetrescalec1pdf = hist
-	self.recobjetrescalec1pdf_flag = True
+        self.recobjetrescalec1pdf = hist
+        self.recobjetrescalec1pdf_flag = True
 
     def showKinematic(self):
-	print "lepton1 ",self.lepton1_p4.Print()
-	print "lepton2 ",self.lepton2_p4.Print()
-	print "dileptons ",self.dilepton_p4.Print()
-	print "b1jet ",self.b1jet_p4.Print()
-	print "b2jet ",self.b2jet_p4.Print()
-	print "Met ",self.met.Print()
+        print("lepton1 "),self.lepton1_p4.Print()
+        print("lepton2 "),self.lepton2_p4.Print()
+        print("dileptons "),self.dilepton_p4.Print()
+        print("b1jet "),self.b1jet_p4.Print()
+        print("b2jet "),self.b2jet_p4.Print()
+        print("Met "),self.met.Print()
 
     def initHMETree(self):
-	""" intialize the HME tree """
-	self.Zll_eta[0] = -9.0; self.Zll_phi[0] = -9.0; self.Zll_pt[0] = -1.0; self.Zll_energy[0] = -1.0; self.Zll_mass[0] = -1.0
-	self.Znunu_eta[0] = -9.0; self.Znunu_phi[0] = -9.0; self.Znunu_pt[0] = -1.0; self.Znunu_energy[0] = -1.0
-	self.htoZZ_eta[0] = -9.0; self.htoZZ_phi[0] = -9.0; self.htoZZ_pt[0] = -1.0; self.htoZZ_energy[0] = -1.0; self.htoZZ_mass[0] = -1.0
-	self.b1jet_eta[0] = -9.0; self.b1jet_phi[0] = -9.0; self.b1jet_pt[0] = -1.0; self.b1jet_energy[0] = -1.0
-	self.b2jet_eta[0] = -9.0; self.b2jet_phi[0] = -9.0; self.b2jet_pt[0] = -1.0; self.b2jet_energy[0] = -1.0
-	self.htoBB_eta[0] = -9.0; self.htoBB_phi[0] = -9.0; self.htoBB_pt[0] = -1.0; self.htoBB_energy[0] = -1.0; self.htoBB_mass[0] = -1.0
-	self.h2tohh_eta[0] = -9.0; self.h2tohh_phi[0] = -9.0; self.h2tohh_pt[0] = -1.0; self.h2tohh_energy[0] = -1.0; self.h2tohh_mass[0] = -1.0
-	self.met_pt[0] = -1.0; self.met_px[0] = -99999.0; self.met_py[0] = -99999.0; self.met_phi[0] = -99999.0
-	self.weight[0] = 1.0; self.weight1[0] = 1.0;  self.weight2[0] = 1.0; self.weight3[0] = 1.0; self.weight4[0] = 1.0
-	self.b1rescalefactor[0] = 1.0; self.b2rescalefactor[0] = 1.0
-	self.nsolutions[0] = 0
+        """ intialize the HME tree """
+        self.Zll_eta[0] = -9.0; self.Zll_phi[0] = -9.0; self.Zll_pt[0] = -1.0; self.Zll_energy[0] = -1.0; self.Zll_mass[0] = -1.0
+        self.Znunu_eta[0] = -9.0; self.Znunu_phi[0] = -9.0; self.Znunu_pt[0] = -1.0; self.Znunu_energy[0] = -1.0
+        self.htoZZ_eta[0] = -9.0; self.htoZZ_phi[0] = -9.0; self.htoZZ_pt[0] = -1.0; self.htoZZ_energy[0] = -1.0; self.htoZZ_mass[0] = -1.0
+        self.b1jet_eta[0] = -9.0; self.b1jet_phi[0] = -9.0; self.b1jet_pt[0] = -1.0; self.b1jet_energy[0] = -1.0
+        self.b2jet_eta[0] = -9.0; self.b2jet_phi[0] = -9.0; self.b2jet_pt[0] = -1.0; self.b2jet_energy[0] = -1.0
+        self.htoBB_eta[0] = -9.0; self.htoBB_phi[0] = -9.0; self.htoBB_pt[0] = -1.0; self.htoBB_energy[0] = -1.0; self.htoBB_mass[0] = -1.0
+        self.h2tohh_eta[0] = -9.0; self.h2tohh_phi[0] = -9.0; self.h2tohh_pt[0] = -1.0; self.h2tohh_energy[0] = -1.0; self.h2tohh_mass[0] = -1.0
+        self.met_pt[0] = -1.0; self.met_px[0] = -99999.0; self.met_py[0] = -99999.0; self.met_phi[0] = -99999.0
+        self.weight[0] = 1.0; self.weight1[0] = 1.0;  self.weight2[0] = 1.0; self.weight3[0] = 1.0; self.weight4[0] = 1.0
+        self.b1rescalefactor[0] = 1.0; self.b2rescalefactor[0] = 1.0
+        self.nsolutions[0] = 0
 
     def getWeightFromHist(self, hist, x):
         binx = hist.FindBin(x)
         if binx == 0 or binx == hist.GetNbinsX() + 1:
-       	   return 0.0
+            return 0.0
         return hist.Interpolate(x)
    
     def getOnshellZMass(self, x0, step, random):
-	
-	xmin = 50.0; xmax = 110.0
+    
+        xmin = 50.0; xmax = 110.0
         while (x0 > xmax or x0 < xmin):
-	    if x0 > xmax:
-	    	x0 = x0 - xmax + xmin
-	    if x0 < xmin:
-	        x0 = xmax - (xmin - x0)
-	x1 = x0 + step
-	while (x1 > xmax or x1 < xmin):
-	    if x1 > xmax:
-	        x1 = x1 - xmax + xmin
-	    if x1 < xmin:
-	        x1 = xmax - (xmin - x1)
-	w0  = self.onshellZmasspdf.Interpolate(x0)
-	w1  = self.onshellZmasspdf.Interpolate(x1)
-	
-	#print "OnshellZmass x0 ",x0," step ", step, " random ", random," w0 ",w0," w1 ",w1," w1/w0 ",w1/w0
-	#w1/w0: transition probability 
-	if (w1/w0 >= random):
-	    return x1
-	elif (w1/w0 < random):
-	    return x0
+            if x0 > xmax:
+                x0 = x0 - xmax + xmin
+            if x0 < xmin:
+                x0 = xmax - (xmin - x0)
+        x1 = x0 + step
+        while (x1 > xmax or x1 < xmin):
+            if x1 > xmax:
+                x1 = x1 - xmax + xmin
+            if x1 < xmin:
+                x1 = xmax - (xmin - x1)
+        w0  = self.onshellZmasspdf.Interpolate(x0)
+        w1  = self.onshellZmasspdf.Interpolate(x1)
+    
+        #print("OnshellZmass x0 ",x0," step ", step, " random ", random," w0 ",w0," w1 ",w1," w1/w0 ",w1/w0)
+        #w1/w0: transition probability 
+        if (w1/w0 >= random):
+            return x1
+        elif (w1/w0 < random):
+            return x0
         else:	
-            print "error in getOnshellZMass "
+            print("error in getOnshellZMass ")
             return 91.18
 
     def getOffshellZMass(self, x0, step, random):
-	
-	xmin = 10.0; xmax = 60.0
+    
+        xmin = 10.0; xmax = 60.0
         while (x0 > xmax or x0 < xmin):
-	    if x0 > xmax:
-	    	x0 = x0 - xmax + xmin
-	    if x0 < xmin:
-	        x0 = xmax - (xmin - x0)
-	x1 = x0 + step
-	while (x1 > xmax or x1 < xmin):
-	    if x1 > xmax:
-	        x1 = x1 - xmax + xmin
-	    if x1 < xmin:
-	        x1 = xmax - (xmin - x1)
-	w0  = self.offshellZmasspdf.Interpolate(x0)
-	w1  = self.offshellZmasspdf.Interpolate(x1)
-	#print "OffshellZmass x0 ",x0," step ", step, " random ", random," w0 ",w0," w1 ",w1," w1/w0 ",w1/w0
-	#w1/w0: transition probability 
-	if (w1/w0 >= random):
-	    return x1
-	elif (w1/w0 < random):
-	    return x0
+            if x0 > xmax:
+                x0 = x0 - xmax + xmin
+            if x0 < xmin:
+                x0 = xmax - (xmin - x0)
+        x1 = x0 + step
+        while (x1 > xmax or x1 < xmin):
+            if x1 > xmax:
+                x1 = x1 - xmax + xmin
+            if x1 < xmin:
+                x1 = xmax - (xmin - x1)
+        w0  = self.offshellZmasspdf.Interpolate(x0)
+        w1  = self.offshellZmasspdf.Interpolate(x1)
+        #print("OffshellZmass x0 ",x0," step ", step, " random ", random," w0 ",w0," w1 ",w1," w1/w0 ",w1/w0)
+        #w1/w0: transition probability 
+        if (w1/w0 >= random):
+            return x1
+        elif (w1/w0 < random):
+            return x0
         else:	
-            print "error in getOffshellWMass "
+            print("error in getOffshellWMass ")
             return 30.18
     
     def bjetsCorrection(self):
-	if not (self.recobjetrescalec1pdf_flag):
-	    #print "failed to have recobjetrescalec1pdf_flag , no Correction"
-	    return True
-	rescalec1 = self.recobjetrescalec1pdf.GetRandom()
+        if not (self.recobjetrescalec1pdf_flag):
+            #print("failed to have recobjetrescalec1pdf_flag , no Correction")
+            return True
+        rescalec1 = self.recobjetrescalec1pdf.GetRandom()
         leadingbjet_p4 = self.b1jet_p4
         trailingbjet_p4 = self.b2jet_p4
         b1jetleadingjet = True
         if self.b1jet_p4.Pt() < self.b2jet_p4.Pt():
-	    b1jetleadingjet = False
-	    leadingbjet_p4 = self.b2jet_p4
-	    trailingbjet_p4 = self.b1jet_p4
-	x1 = trailingbjet_p4.M2()
-	x2 = 2*rescalec1*(leadingbjet_p4*trailingbjet_p4)
-	x3 = rescalec1*rescalec1*leadingbjet_p4.M2() - 125.0*125.0
-	if x2<0:
-	    print "error bjets lorentzvector dot product less than 0"
-	    return False
+            b1jetleadingjet = False
+            leadingbjet_p4 = self.b2jet_p4
+            trailingbjet_p4 = self.b1jet_p4
+        x1 = trailingbjet_p4.M2()
+        x2 = 2*rescalec1*(leadingbjet_p4*trailingbjet_p4)
+        x3 = rescalec1*rescalec1*leadingbjet_p4.M2() - 125.0*125.0
+        if x2<0:
+            print("error bjets lorentzvector dot product less than 0")
+            return False
         if ((x2*x2 - 4*x1*x3) < 0 or x1 == 0):
-	    print "error ! there is no soluations for bjetsCorrection "
-	    return False
-	rescalec2 = (-x2 + sqrt(x2*x2 - 4*x1*x3))/(2*x1)
-	if rescalec2 < .0:
-	    #print "negative rescalec2: ",rescalec2
-	    return False
-	#print "rescalec1 ",rescalec1," rescalec2 ",rescalec2
-	if b1jetleadingjet:
-	    self.b1rescalefactor[0] = rescalec1
-	    self.b2rescalefactor[0] = rescalec2
-	else:
-	    self.b1rescalefactor[0] = rescalec2
-	    self.b2rescalefactor[0] = rescalec1
+            print("error ! there is no soluations for bjetsCorrection ")
+            return False
+        rescalec2 = (-x2 + sqrt(x2*x2 - 4*x1*x3))/(2*x1)
+        if rescalec2 < .0:
+            return False
+        if b1jetleadingjet:
+            self.b1rescalefactor[0] = rescalec1
+            self.b2rescalefactor[0] = rescalec2
+        else:
+            self.b1rescalefactor[0] = rescalec2
+            self.b2rescalefactor[0] = rescalec1
         return True	
 
+    def metCorrection_dijet(self):
+        if self.dijetrescalefactor < 0.0:
+            print("dibjet correction is working properly, self.dijetrescalefactor ",self.dijetrescalefactor)
+            return ROOT.TVector2(0.0, 0.0)	
+        metpx_tmp = - (self.dijetrescalefactor - 1.0)*self.dijet_p4.Px()
+        metpy_tmp = - (self.dijetrescalefactor - 1.0)*self.dijet_p4.Py()
+        return ROOT.TVector2(metpx_tmp, metpy_tmp)
+    
     def metCorrection(self):
         if self.b1rescalefactor[0] < 0.0 or self.b2rescalefactor[0] < 0.0:
-	    print "bjet elaborate correction is working properly, b1rescalefactor ",self.b1rescalefactor[0]," b2rescalefactor ",self.b2rescalefactor[0]
-	    return ROOT.TVector2(0.0, 0.0)	
-	metpx_tmp = - (self.b1rescalefactor[0] - 1.0)*self.b1jet_p4.Px() - (self.b2rescalefactor[0] - 1.0)*self.b2jet_p4.Px()
-	metpy_tmp = - (self.b1rescalefactor[0] - 1.0)*self.b1jet_p4.Py() - (self.b2rescalefactor[0] - 1.0)*self.b2jet_p4.Py()
-	return ROOT.TVector2(metpx_tmp, metpy_tmp)
+            print("bjet elaborate correction is working inproperly, b1rescalefactor ",self.b1rescalefactor[0]," b2rescalefactor ",self.b2rescalefactor[0])
+            return ROOT.TVector2(0.0, 0.0)	
+        metpx_tmp = - (self.b1rescalefactor[0] - 1.0)*self.b1jet_p4.Px() - (self.b2rescalefactor[0] - 1.0)*self.b2jet_p4.Px()
+        metpy_tmp = - (self.b1rescalefactor[0] - 1.0)*self.b1jet_p4.Py() - (self.b2rescalefactor[0] - 1.0)*self.b2jet_p4.Py()
+        return ROOT.TVector2(metpx_tmp, metpy_tmp)
     
-	
+    def metSmearing_Cov(self, metx, mety, covxx, covyy, covxy, Niter, seed):
+        ##reference: https://juanitorduz.github.io/multivariate_normal/
+        d = 2
+        mean = np.array([metx, mety]).reshape(2,1)
+        covmatrix = np.array([[covxx, covxy], [covxy, covyy]])
+
+        np.linalg.eigvals(covmatrix)
+
+        epsilon = 0.01
+
+
+        K = covmatrix + epsilon*np.identity(d)
+        L = np.linalg.cholesky(K)
+        testK = np.dot(L, np.transpose(L))
+        print("K ", K, " testK ", testK)
+
+        if seed > 0:
+            np.random.seed(seed)
+        u = np.random.normal(loc=0, scale=1, size=d*Niter).reshape(d, Niter)
+        dx = np.dot(L, u)## met after smearing with covariant method
+
+
+        for i in range(Niter):
+            print("x : ", dx[0][i]," y: ", dx[1][i])
+        
+        return dx
+    
     def ZtonunuPzAndE(self, dilepton_p4, met, zMass, hMass, case):
-	mll = dilepton_p4.M()
-	Ell = dilepton_p4.Energy()
-	Pzll = dilepton_p4.Pz()
+        mll = dilepton_p4.M()
+        Ell = dilepton_p4.Energy()
+        Pzll = dilepton_p4.Pz()
         a1 = met.Mod2()+ zMass*zMass
-	a2 = (hMass*hMass - zMass*zMass - mll*mll)/2.0 + met.Px()*dilepton_p4.Px() + met.Py()*dilepton_p4.Py()
-	a3 =  4*a2*a2*Pzll*Pzll - 4*(Ell*Ell*a1 - a2*a2)*(Ell*Ell - Pzll*Pzll)
-	#print "mll ",mll," Ell ",Ell," Pzll ", Pzll," metx ",met.Px()," mety ",met.Py(), " zmass ",zMass, " hmass ",hMass," a1 ",a1, " a2 ",a2, " a3 ",a3
-	if a3>0 and case==0:
-	   Pznunu = (2*a2*Pzll + sqrt(a3))/(2*(Ell*Ell-Pzll*Pzll))
-	   Enunu = (a2 + Pznunu*dilepton_p4.Pz())/dilepton_p4.Energy()
-	   if Enunu<0.0:
-		print "warning Pz(nunu) ",Pznunu," E(nunu) ",Enunu," E is not positive!!!!"
-	   return Pznunu, Enunu
-	elif a3>0 and case==1:
-	   Pznunu = (2*a2*Pzll - sqrt(a3))/(2*(Ell*Ell-Pzll*Pzll))
-	   Enunu = (a2 + Pznunu*dilepton_p4.Pz())/dilepton_p4.Energy()
-	   if Enunu<0.0:
-		print "warning Pz(nunu) ",Pznunu," E(nunu) ",Enunu," E is not positive!!!!"
-	   return Pznunu, Enunu
-	else:
-	   return 0.0, -1.0
+        a2 = (hMass*hMass - zMass*zMass - mll*mll)/2.0 + met.Px()*dilepton_p4.Px() + met.Py()*dilepton_p4.Py()
+        a3 =  4*a2*a2*Pzll*Pzll - 4*(Ell*Ell*a1 - a2*a2)*(Ell*Ell - Pzll*Pzll)
+        if a3>0 and case==0:
+            Pznunu = (2*a2*Pzll + sqrt(a3))/(2*(Ell*Ell-Pzll*Pzll))
+            Enunu = (a2 + Pznunu*dilepton_p4.Pz())/dilepton_p4.Energy()
+            if Enunu<0.0:
+                print("warning Pz(nunu) ",Pznunu," E(nunu) ",Enunu," E is not positive!!!!")
+            return Pznunu, Enunu
+        elif a3>0 and case==1:
+            Pznunu = (2*a2*Pzll - sqrt(a3))/(2*(Ell*Ell-Pzll*Pzll))
+            Enunu = (a2 + Pznunu*dilepton_p4.Pz())/dilepton_p4.Energy()
+            if Enunu<0.0:
+                print("warning Pz(nunu) ",Pznunu," E(nunu) ",Enunu," E is not positive!!!!")
+            return Pznunu, Enunu
+        else:
+            return 0.0, -1.0
 
 
     def runHME(self):
-	if not(self.onshellZmasspdf_flag and self.offshellZmasspdf_flag):
-	    print "no onshellZmasspdf, offshellZmasspdf, error!!! "
-	    return  False
-	#initial wmass_gen
-	self.met_px[0] = self.met.Px(); self.met_py[0] = self.met.Py()
-	it = 0
-	genRandom = ROOT.TRandom3(0)
+        if not(self.onshellZmasspdf_flag and self.offshellZmasspdf_flag):
+            print("no onshellZmasspdf, offshellZmasspdf, error!!! ")
+            return  False
+        #initial wmass_gen
+        self.met_px[0] = self.met.Px(); self.met_py[0] = self.met.Py()
+        it = 0
+        genRandom = ROOT.TRandom3(0)
         #PUSample: 25.2, PU0: 14.8
         met_sigma = 25.2
         if not self.recobjetrescalec1pdf_flag:
-		met_sigma = 0.0	
+        met_sigma = 0.0	
         #genRandom.SetSeed()
-	self.dilepton_mass[0] = self.dilepton_p4.M()
+        self.dilepton_mass[0] = self.dilepton_p4.M()
         if self.dilepton_mass[0] < 60.0:
-	    self.Znunu_mass[0] = 80.0
-	else:
-	    self.Znunu_mass[0] = 20.0
+            self.Znunu_mass[0] = 80.0
+        else:
+            self.Znunu_mass[0] = 20.0
 
-
-	#print "iterations ",self.iterations
-	while (it < self.iterations ):
-	    it += 1
-	    self.initHMETree()
-	    rand01 = genRandom.Uniform(0., 1.0)
-	    step = genRandom.Uniform(-10.0, 10.0)
-	    #print "self.iterations ",self.iterations," it ",it," dilepton_mass ",self.dilepton_mass[0]," self.Znunu_mass[0] ",self.Znunu_mass[0]," rand01 ",rand01," step ",step
-	    if self.dilepton_mass[0] < 60.0:
-	   	## z->mumu offshell, sample one onshell Z mass for z->nunu 
-	        self.Znunu_mass[0] = self.getOnshellZMass(self.Znunu_mass[0], step, rand01) 
+        dxy_covcorrection = None
+        while (it < self.iterations ):
+            it += 1
+            self.initHMETree()
+            rand01 = genRandom.Uniform(0., 1.0)
+            step = genRandom.Uniform(-10.0, 10.0)
+            #print("self.iterations ",self.iterations," it ",it," dilepton_mass ",self.dilepton_mass[0]," self.Znunu_mass[0] ",self.Znunu_mass[0]," rand01 ",rand01," step ",step)
+            if self.dilepton_mass[0] < 60.0:
+            ## z->mumu offshell, sample one onshell Z mass for z->nunu 
+                self.Znunu_mass[0] = self.getOnshellZMass(self.Znunu_mass[0], step, rand01) 
             else:
-	   	## z->mumu onshell, sample one offshell Z mass for z->nunu 
-	        self.Znunu_mass[0] = self.getOffshellZMass(self.Znunu_mass[0], step, rand01) 
-	    self.hmass_gen[0] = genRandom.Gaus(125.03, 0.004)
-	    #print "it ",it," self.eta_gen[0] ",self.eta_gen[0]," wmass_gen ",self.wmass_gen[0]
-	    #update met 
-	    if self.recobjetrescalec1pdf_flag:
-		while not self.bjetsCorrection():
-		    #print "fail to get bjetcorrection, try to get next one "
-		    pass
-		met_dpx = genRandom.Gaus(0.0, met_sigma)
-		met_dpy = genRandom.Gaus(0.0, met_sigma)
-		met_corr = self.met + ROOT.TVector2(met_dpx, met_dpy)+ self.metCorrection()
+            ## z->mumu onshell, sample one offshell Z mass for z->nunu 
+                self.Znunu_mass[0] = self.getOffshellZMass(self.Znunu_mass[0], step, rand01) 
+            self.hmass_gen[0] = genRandom.Gaus(125.03, 0.004)
+            #smearing met 
+            met_dpx = None; met_dpy = None
+            if self.met_covcorrection:
+                dxy_covcorrection = self.metSmearing_Cov(self.met_px[0], self.met_py[0], self.met_covxx, self.met_covyy, self.met_covxy, 1, it)
+                met_dpx = dxy_covcorrection[0][0]
+                met_dpy = dxy_covcorrection[1][0]
             else:
-		met_corr = self.met
-		self.b1rescalefactor[0] = 1.0
-		self.b2rescalefactor[0] = 1.0
-	    self.htoBB_p4 = self.b1jet_p4 * self.b1rescalefactor[0] + self.b2jet_p4 * self.b2rescalefactor[0]
-	    self.metpx_corr[0]= met_corr.Px()
-	    self.metpy_corr[0] = met_corr.Py()
-    	    #print "Zll mass ",self.dilepton_p4.M()," px ",self.dilepton_p4.Px()," py ",self.dilepton_p4.Py()," pz ",self.dilepton_p4.Pz()
-            #print "met_px ",self.met.Px()," met_py ",self.met.Py()," after correction px ",met_corr.Px()," py ",met_corr.Py()
-	    #print "HtoBB mass ",self.htoBB_p4.M()
-	    self.nsolutions[0] = 0
-	    isolution = 0
-	    solutions = [False, False]
-	    #1. permutation 
-	    #2. check nu_onshell_W pt
-	    #3. solve the kinematics
-	    #4. mark solution is ture if it is solved
-	    #5. dump information into tree
-	    while isolution < len(solutions):
-		self.Znunu_pz[0], self.Znunu_energy[0] = self.ZtonunuPzAndE(self.dilepton_p4, met_corr, self.Znunu_mass[0], self.hmass_gen[0], isolution)
-		if self.Znunu_energy[0]<0.0:	
-		    isolution += 1
-		    continue
-	        self.Zll_p4 = self.dilepton_p4
-	        self.Znunu_p4 = ROOT.TLorentzVector(met_corr.Px(), met_corr.Py(), self.Znunu_pz[0], self.Znunu_energy[0])
-		self.htoZZ_p4 = self.Zll_p4 + self.Znunu_p4
-		self.h2tohh_p4 = self.htoZZ_p4 + self.htoBB_p4
+                met_dpx = genRandom.Gaus(0.0, self.met_sigma)
+                met_dpy = genRandom.Gaus(0.0, self.met_sigma)
 
-		if (fabs(self.htoZZ_p4.M() - self.hmass_gen[0])>1.0):
-		    print "Error!! hmass_gen ", self.hmass_gen[0], " higgs mass from HME htoZZ_p4 ", self.htoZZ_p4.M()
-		#print "get this h2tohh_mass ",self.h2tohh_p4.M()," iter ",it
+            if self.recobjetrescalec1pdf_flag:
+                while not self.bjetsCorrection():
+                    #print("fail to get bjetcorrection, try to get next one ")
+                    pass
+                met_corr = self.met + ROOT.TVector2(met_dpx, met_dpy)+ self.metCorrection()
+            else:
+                met_corr = self.met
+                self.b1rescalefactor[0] = 1.0
+                self.b2rescalefactor[0] = 1.0
+            self.htoBB_p4 = self.b1jet_p4 * self.b1rescalefactor[0] + self.b2jet_p4 * self.b2rescalefactor[0]
+            self.metpx_corr[0] = met_corr.Px()
+            self.metpy_corr[0] = met_corr.Py()
+            #print("Zll mass ",self.dilepton_p4.M()," px ",self.dilepton_p4.Px()," py ",self.dilepton_p4.Py()," pz ",self.dilepton_p4.Pz())
+            #print("met_px ",self.met.Px()," met_py ",self.met.Py()," after correction px ",met_corr.Px()," py ",met_corr.Py())
+            #print("HtoBB mass ",self.htoBB_p4.M())
+            self.nsolutions[0] = 0
+            isolution = 0
+            solutions = [False, False]
+            #1. permutation 
+            #2. check nu_onshell_W pt
+            #3. solve the kinematics
+            #4. mark solution is ture if it is solved
+            #5. dump information into tree
+            while isolution < len(solutions):
+                self.Znunu_pz[0], self.Znunu_energy[0] = self.ZtonunuPzAndE(self.dilepton_p4, met_corr, self.Znunu_mass[0], self.hmass_gen[0], isolution)
+                if self.Znunu_energy[0]<0.0:	
+                    isolution += 1
+                    continue
+                self.Zll_p4 = self.dilepton_p4
+                self.Znunu_p4 = ROOT.TLorentzVector(met_corr.Px(), met_corr.Py(), self.Znunu_pz[0], self.Znunu_energy[0])
+                self.htoZZ_p4 = self.Zll_p4 + self.Znunu_p4
+                self.h2tohh_p4 = self.htoZZ_p4 + self.htoBB_p4
 
-		self.Zll_mass[0] = self.Zll_p4.M()
-		self.Zll_eta[0] = self.Zll_p4.Eta()
-		self.Zll_phi[0] = self.Zll_p4.Phi()
-		self.Zll_pt[0] = self.Zll_p4.Pt()
-		self.Zll_energy[0] = self.Zll_p4.Energy()
-		self.Znunu_eta[0] = self.Znunu_p4.Eta()
-		self.Znunu_phi[0] = self.Znunu_p4.Phi()
-		self.Znunu_pt[0] = self.Znunu_p4.Pt()
-		#self.Znunu_energy[0] = self.Znunu_p4.Energy()
-		#self.Znunu_mass[0] = self.Znunu_p4.M()
+                if (fabs(self.htoZZ_p4.M() - self.hmass_gen[0])>1.0):
+                    print("Error!! hmass_gen ", self.hmass_gen[0], " higgs mass from HME htoZZ_p4 ", self.htoZZ_p4.M())
+
+                self.Zll_mass[0] = self.Zll_p4.M()
+                self.Zll_eta[0] = self.Zll_p4.Eta()
+                self.Zll_phi[0] = self.Zll_p4.Phi()
+                self.Zll_pt[0] = self.Zll_p4.Pt()
+                self.Zll_energy[0] = self.Zll_p4.Energy()
+                self.Znunu_eta[0] = self.Znunu_p4.Eta()
+                self.Znunu_phi[0] = self.Znunu_p4.Phi()
+                self.Znunu_pt[0] = self.Znunu_p4.Pt()
+                self.Znunu_energy[0] = self.Znunu_p4.Energy()
+                self.Znunu_mass[0] = self.Znunu_p4.M()
 
 
-    		self.htoZZ_eta[0] = self.htoZZ_p4.Eta()
-    		self.htoZZ_phi[0] = self.htoZZ_p4.Phi()
-    		self.htoZZ_pt[0] = self.htoZZ_p4.Pt()
-    		self.htoZZ_energy[0] = self.htoZZ_p4.Energy()
-    		self.htoZZ_mass[0] = self.htoZZ_p4.M()
-    		self.htoBB_eta[0] = self.htoBB_p4.Eta()
-    		self.htoBB_phi[0] = self.htoBB_p4.Phi()
-    		self.htoBB_pt[0] = self.htoBB_p4.Pt()
-    		self.htoBB_energy[0] = self.htoBB_p4.Energy()
-    		self.htoBB_mass[0] = self.htoBB_p4.M()
-    		self.h2tohh_pt[0] = self.h2tohh_p4.Pt()
-    		self.h2tohh_energy[0] = self.h2tohh_p4.Energy()
-    		self.h2tohh_mass[0] = self.h2tohh_p4.M()
+                self.htoZZ_eta[0] = self.htoZZ_p4.Eta()
+                self.htoZZ_phi[0] = self.htoZZ_p4.Phi()
+                self.htoZZ_pt[0] = self.htoZZ_p4.Pt()
+                self.htoZZ_energy[0] = self.htoZZ_p4.Energy()
+                self.htoZZ_mass[0] = self.htoZZ_p4.M()
+                self.htoBB_eta[0] = self.htoBB_p4.Eta()
+                self.htoBB_phi[0] = self.htoBB_p4.Phi()
+                self.htoBB_pt[0] = self.htoBB_p4.Pt()
+                self.htoBB_energy[0] = self.htoBB_p4.Energy()
+                self.htoBB_mass[0] = self.htoBB_p4.M()
+                self.h2tohh_pt[0] = self.h2tohh_p4.Pt()
+                self.h2tohh_energy[0] = self.h2tohh_p4.Energy()
+                self.h2tohh_mass[0] = self.h2tohh_p4.M()
 
-		if (self.h2tohh_p4.Pt()/self.h2tohh_p4.E() <.00000001):
-		    print "Strange case: h2tohh pt ", self.h2tohh_p4.Pt(), " energy ",self.h2tohh_p4.E()
-		    self.h2tohh_eta[0] = 1000000.0; self.h2tohh_phi[0] = 0.0
-		else:
-		    self.h2tohh_eta[0] = self.h2tohh_p4.Eta(); self.h2tohh_phi[0] = self.h2tohh_p4.Phi()
-		self.hme_h2Mass.Fill(self.h2tohh_mass[0], self.weight[0])
-	        if self.onshellnuptpdf_flag:
-		    self.weight1[0] = self.weight[0] * self.getWeightFromHist(self.onshellnuptpdf, self.nu_Zll_pt[0]) 
-    		self.hme_h2MassWeight1.Fill(self.h2tohh_mass[0], self.weight1[0])
-	 	isolution += 1 
-	##### end of iteration
+                if (self.h2tohh_p4.Pt()/self.h2tohh_p4.E() <.00000001):
+                    print("Strange case: h2tohh pt ", self.h2tohh_p4.Pt(), " energy ",self.h2tohh_p4.E())
+                    self.h2tohh_eta[0] = 1000000.0; self.h2tohh_phi[0] = 0.0
+                else:
+                    self.h2tohh_eta[0] = self.h2tohh_p4.Eta(); self.h2tohh_phi[0] = self.h2tohh_p4.Phi()
+                self.hme_h2Mass.Fill(self.h2tohh_mass[0], self.weight[0])
+                if self.onshellnuptpdf_flag:
+                    self.weight1[0] = self.weight[0] * self.getWeightFromHist(self.onshellnuptpdf, self.nu_Zll_pt[0]) 
+                self.hme_h2MassWeight1.Fill(self.h2tohh_mass[0], self.weight1[0])
+                isolution += 1  ## end of  while isolution < len(solutions):
+        ##### end of iteration
 
 
 
