@@ -14,7 +14,8 @@ class HeavyMassEstimator(object):
         root fils contains all PDFs
     hmetree should contain full information from  HME
     """
-    iterations = 100
+    iterations = 1000
+    nbjetcorr = 100
     onshellnuptpdf = ROOT.TH1F()
     onshellWmasspdf = ROOT.TH1F()
     offshellWmasspdf = ROOT.TH1F()
@@ -267,6 +268,9 @@ class HeavyMassEstimator(object):
     def setIterations(self, n):
         self.iterations = int(n)
 
+    def setNbjetcorr(self, n):
+        self.nbjetcorr = int(n)
+
     def setMETResolution(self, x):
     ##if not set, then use the default value!
     #default PUSample: 25.2, PU0: 14.8
@@ -515,7 +519,7 @@ class HeavyMassEstimator(object):
             tmp_nu_eta = tmp_p4_v2.Eta() - deta
         else :
             tmp_nu_eta = tmp_p4_v2.Eta() + deta
-        if (abs(tmp_nu_eta) > 6.0):
+        if (abs(tmp_nu_eta) > 7.0):
         #very unlikely solution
             print("tmp_nu_eta ",tmp_nu_eta, " very unlikely solution, pass")
             nu2_p4.SetPtEtaPhiM(0.0, 0.0, 0.0, 0.0)
@@ -577,9 +581,16 @@ class HeavyMassEstimator(object):
             else:
                 ### resolved case
                 if self.recobjetrescalec1pdf_flag:
-                    while not self.bjetsCorrection():
-                        #print("fail to get bjetcorrection, try to get next one ")
-                        pass
+		    ibjetcorr = 0
+		    found_bjetscorr = False
+		    while (ibjetcorr < self.nbjetcorr) : ### use 100, experiential
+			if self.bjetsCorrection():
+			    found_bjetscorr = True
+			    break
+			ibjetcorr += 1
+		    if not found_bjetscorr:
+		        print("no bject correction is found! ignore this iteration, it ", it, " total trials ", ibjetcorr)
+		        continue
                     met_corr = self.met + ROOT.TVector2(met_dpx, met_dpy)+ self.metCorrection()
                 else:
                     met_corr = self.met
