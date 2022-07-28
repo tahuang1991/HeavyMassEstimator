@@ -14,6 +14,7 @@ class HeavyMassEstimator(object):
     hmetree should contain full information from  HME
     """
     iterations = 100
+    nbjetcorr = 100
     onshellnuptpdf = ROOT.TH1F()
     onshellZmasspdf = ROOT.TH1F()
     offshellZmasspdf = ROOT.TH1F()
@@ -139,6 +140,9 @@ class HeavyMassEstimator(object):
     
     def setIterations(self, n):
         self.iterations = n
+
+    def setNbjetcorr(self, n):
+        self.nbjetcorr = int(n)
 
     def setMETResolution(self, x):
     ##if not set, then use the default value!
@@ -398,9 +402,16 @@ class HeavyMassEstimator(object):
                 met_dpy = genRandom.Gaus(0.0, self.met_sigma)
 
             if self.recobjetrescalec1pdf_flag:
-                while not self.bjetsCorrection():
-                    #print("fail to get bjetcorrection, try to get next one ")
-                    pass
+                if self.recobjetrescalec1pdf_flag:
+                    ibjetcorr = 0
+                    found_bjetscorr = False
+                    while (ibjetcorr < self.nbjetcorr) : ### use 100, experiential
+                        if self.bjetsCorrection():
+                            found_bjetscorr = True
+                            break
+                        ibjetcorr += 1
+                    if not found_bjetscorr:
+                        print("no bject correction is found! ignore this iteration, it ", it, " total trials ", ibjetcorr)
                 met_corr = self.met + ROOT.TVector2(met_dpx, met_dpy)+ self.metCorrection()
             else:
                 met_corr = self.met
