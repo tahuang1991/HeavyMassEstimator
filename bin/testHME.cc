@@ -170,66 +170,70 @@ int main(int argc, char *argv[])
     
  
     for (int ievent=0; ievent <nevent; ievent++){
-	evlist[ievent].print();
-	//boosted events with mass =1600 GeV
-	if (ievent >= 7 and ievent <=9 ){
-	    bjetrescaleAlgo = 0;
-	    metcorrection = 6;
-	    h2tohh_mass = 1600;
-	}
+      evlist[ievent].print();
+      //boosted events with mass =1600 GeV
+      if (ievent >= 7 and ievent <=9 ){
+          bjetrescaleAlgo = 0;
+          metcorrection = 6;
+          h2tohh_mass = 1600;
+      }
 
 
-        heavyMassEstimator hme(PUSample, weightfromonshellnupt_func, weightfromonshellnupt_hist, weightfromonoffshellWmass_hist,
+      heavyMassEstimator hme(PUSample, weightfromonshellnupt_func, weightfromonshellnupt_hist, weightfromonoffshellWmass_hist,
 	    iterations, RefPDFfile, useMET, bjetrescaleAlgo, metcorrection);
-        hme.set_inputs(evlist[ievent].lep1_p4, evlist[ievent].lep2_p4, 
-            evlist[ievent].b1jet_p4, evlist[ievent].b2jet_p4, 
-            evlist[ievent].totjets_p4, evlist[ievent].met_p4, 
-	    ievent);
-	bool runheavyMassEstimatorok = hme.runheavyMassEstimator();
-	if (runheavyMassEstimatorok) {
-	  //heavyMassEstimatortree =  (hme.getheavyMassEstimatorTree())->CloneTree();
-	    std::stringstream ss;
-	  ss <<"heavyMassEstimator_h2mass_event"<< ievent;
-	  const std::string histname(ss.str());
-	  std::stringstream ss1;
-	  ss1 <<"heavyMassEstimator_h2massweight1_event"<< ievent;
-	  const std::string histname1(ss1.str());
-	  std::stringstream ss4;
-	  ss4 <<"heavyMassEstimator_h2massweight4_event"<< ievent;
-	  const std::string histname4(ss4.str());
-	  TH1F* heavyMassEstimator_h2mass =(TH1F*)(hme.getheavyMassEstimatorh2()).Clone(histname.c_str());
-	  TH1F* heavyMassEstimator_h2mass_weight1 =(TH1F*)(hme.getheavyMassEstimatorh2weight1()).Clone(histname1.c_str());
-	  TH1F* heavyMassEstimator_h2mass_weight4 =(TH1F*)(hme.getheavyMassEstimatorh2weight4()).Clone(histname4.c_str());
-	  //std::cout <<" Mass_h2mass in Analyzer " << std::endl;
-	  float heavyMassEstimator_h2mass_prob = (heavyMassEstimator_h2mass->GetXaxis())->GetBinCenter(heavyMassEstimator_h2mass->GetMaximumBin());
-	  float heavyMassEstimator_h2massweight1_prob = (heavyMassEstimator_h2mass_weight1->GetXaxis())->GetBinCenter(heavyMassEstimator_h2mass_weight1->GetMaximumBin());
-	  float heavyMassEstimator_h2massweight4_prob = (heavyMassEstimator_h2mass_weight4->GetXaxis())->GetBinCenter(heavyMassEstimator_h2mass_weight4->GetMaximumBin());
-	  float heavyMassEstimator_h2mass_RMS = heavyMassEstimator_h2mass->GetRMS();
-	  float heavyMassEstimator_h2massweight1_RMS = heavyMassEstimator_h2mass_weight1->GetRMS();
-	  float heavyMassEstimator_h2massweight4_RMS = heavyMassEstimator_h2mass_weight4->GetRMS();
-	  //float heavyMassEstimator_h2mass_Entries = heavyMassEstimator_h2mass->GetEntries();
-	  //float heavyMassEstimator_h2mass_Mean = heavyMassEstimator_h2mass->GetMean();
-	  //int nbin=(heavyMassEstimator_h2mass->GetXaxis())->GetNbins();
-	  //float heavyMassEstimator_h2mass_overflow = heavyMassEstimator_h2mass->GetBinContent(nbin+1);
-	  //float heavyMassEstimator_h2mass_underflow = heavyMassEstimator_h2mass->GetBinContent(-1);
-	  //float heavyMassEstimator_h2mass_MaxBin = heavyMassEstimator_h2mass->GetBinContent( heavyMassEstimator_h2mass->GetMaximumBin() );
-	  //float heavyMassEstimator_h2mass_weight1_MaxBin = heavyMassEstimator_h2mass_weight1->GetBinContent( heavyMassEstimator_h2mass_weight1->GetMaximumBin() );
-	  //float heavyMassEstimator_h2mass_weight4_MaxBin = heavyMassEstimator_h2mass_weight4->GetBinContent( heavyMassEstimator_h2mass_weight4->GetMaximumBin() );
-	  std::cout <<"True HH mass "<< h2tohh_mass <<"; Reconstructed HH mass " << heavyMassEstimator_h2mass_prob <<" +/- "<< heavyMassEstimator_h2mass_RMS << "; reconstructed HH mass with type1 weight "<< heavyMassEstimator_h2massweight1_prob <<" +/- " << heavyMassEstimator_h2massweight1_RMS <<"; Reconstructed HH mass with type2 weight "<< heavyMassEstimator_h2massweight4_prob <<" +/- "<< heavyMassEstimator_h2massweight4_RMS <<std::endl;
-	  if (heavyMassEstimator_h2mass_prob < 245 ) {
-		std::cerr <<" error !!! heavyMassEstimator_h2mass_prob < 250, heavyMassEstimator_h2mass_prob: " <<heavyMassEstimator_h2mass_prob 
-			<<" eventid "<< ievent <<std::endl;
-		heavyMassEstimator_h2mass->Print("ALL");
-	  }
-	  if (heavyMassEstimator_h2massweight1_prob < 245 ) {
-		std::cerr <<" error !!! heavyMassEstimator_h2mass_prob < 250, heavyMassEstimator_h2massweight1_prob: " <<heavyMassEstimator_h2massweight1_prob 
-			<<" eventid "<< ievent <<std::endl;
-		heavyMassEstimator_h2mass_weight1->Print("ALL");
-	  }
-	      //##!! NOT ALL HISTOS 
-	      //if (keepheavyMassEstimatorhist)
-	      //	file->WriteObject(heavyMassEstimator_h2mass, histname.c_str());
-	}//runheavyMassEstimatorok
+      hme.set_inputs(evlist[ievent].lep1_p4, evlist[ievent].lep2_p4, 
+        evlist[ievent].b1jet_p4, evlist[ievent].b2jet_p4, 
+        evlist[ievent].totjets_p4, evlist[ievent].met_p4, 
+        ievent);
+      if (ievent == nevent-1 ){
+        //use MET covariance matrix smearing 
+        hme.setMETCovMatrix(2.0, 2.0, 1.0, true);
+      }
+      bool runheavyMassEstimatorok = hme.runheavyMassEstimator();
+      if (runheavyMassEstimatorok) {
+        //heavyMassEstimatortree =  (hme.getheavyMassEstimatorTree())->CloneTree();
+          std::stringstream ss;
+        ss <<"heavyMassEstimator_h2mass_event"<< ievent;
+        const std::string histname(ss.str());
+        std::stringstream ss1;
+        ss1 <<"heavyMassEstimator_h2massweight1_event"<< ievent;
+        const std::string histname1(ss1.str());
+        std::stringstream ss4;
+        ss4 <<"heavyMassEstimator_h2massweight4_event"<< ievent;
+        const std::string histname4(ss4.str());
+        TH1F* heavyMassEstimator_h2mass =(TH1F*)(hme.getheavyMassEstimatorh2()).Clone(histname.c_str());
+        TH1F* heavyMassEstimator_h2mass_weight1 =(TH1F*)(hme.getheavyMassEstimatorh2weight1()).Clone(histname1.c_str());
+        TH1F* heavyMassEstimator_h2mass_weight4 =(TH1F*)(hme.getheavyMassEstimatorh2weight4()).Clone(histname4.c_str());
+        //std::cout <<" Mass_h2mass in Analyzer " << std::endl;
+        float heavyMassEstimator_h2mass_prob = (heavyMassEstimator_h2mass->GetXaxis())->GetBinCenter(heavyMassEstimator_h2mass->GetMaximumBin());
+        float heavyMassEstimator_h2massweight1_prob = (heavyMassEstimator_h2mass_weight1->GetXaxis())->GetBinCenter(heavyMassEstimator_h2mass_weight1->GetMaximumBin());
+        float heavyMassEstimator_h2massweight4_prob = (heavyMassEstimator_h2mass_weight4->GetXaxis())->GetBinCenter(heavyMassEstimator_h2mass_weight4->GetMaximumBin());
+        float heavyMassEstimator_h2mass_RMS = heavyMassEstimator_h2mass->GetRMS();
+        float heavyMassEstimator_h2massweight1_RMS = heavyMassEstimator_h2mass_weight1->GetRMS();
+        float heavyMassEstimator_h2massweight4_RMS = heavyMassEstimator_h2mass_weight4->GetRMS();
+        //float heavyMassEstimator_h2mass_Entries = heavyMassEstimator_h2mass->GetEntries();
+        //float heavyMassEstimator_h2mass_Mean = heavyMassEstimator_h2mass->GetMean();
+        //int nbin=(heavyMassEstimator_h2mass->GetXaxis())->GetNbins();
+        //float heavyMassEstimator_h2mass_overflow = heavyMassEstimator_h2mass->GetBinContent(nbin+1);
+        //float heavyMassEstimator_h2mass_underflow = heavyMassEstimator_h2mass->GetBinContent(-1);
+        //float heavyMassEstimator_h2mass_MaxBin = heavyMassEstimator_h2mass->GetBinContent( heavyMassEstimator_h2mass->GetMaximumBin() );
+        //float heavyMassEstimator_h2mass_weight1_MaxBin = heavyMassEstimator_h2mass_weight1->GetBinContent( heavyMassEstimator_h2mass_weight1->GetMaximumBin() );
+        //float heavyMassEstimator_h2mass_weight4_MaxBin = heavyMassEstimator_h2mass_weight4->GetBinContent( heavyMassEstimator_h2mass_weight4->GetMaximumBin() );
+        std::cout <<"True HH mass "<< h2tohh_mass <<"; Reconstructed HH mass " << heavyMassEstimator_h2mass_prob <<" +/- "<< heavyMassEstimator_h2mass_RMS << "; reconstructed HH mass with type1 weight "<< heavyMassEstimator_h2massweight1_prob <<" +/- " << heavyMassEstimator_h2massweight1_RMS <<"; Reconstructed HH mass with type2 weight "<< heavyMassEstimator_h2massweight4_prob <<" +/- "<< heavyMassEstimator_h2massweight4_RMS <<std::endl;
+        if (heavyMassEstimator_h2mass_prob < 245 ) {
+          std::cerr <<" error !!! heavyMassEstimator_h2mass_prob < 250, heavyMassEstimator_h2mass_prob: " <<heavyMassEstimator_h2mass_prob 
+            <<" eventid "<< ievent <<std::endl;
+          heavyMassEstimator_h2mass->Print("ALL");
+        }
+        if (heavyMassEstimator_h2massweight1_prob < 245 ) {
+          std::cerr <<" error !!! heavyMassEstimator_h2mass_prob < 250, heavyMassEstimator_h2massweight1_prob: " <<heavyMassEstimator_h2massweight1_prob 
+          <<" eventid "<< ievent <<std::endl;
+          heavyMassEstimator_h2mass_weight1->Print("ALL");
+        }
+        //##!! NOT ALL HISTOS 
+        //if (keepheavyMassEstimatorhist)
+        //	file->WriteObject(heavyMassEstimator_h2mass, histname.c_str());
+      }//runheavyMassEstimatorok
     }
     std::cout << std::endl;
     std::cout << "*****************************************************************************************************************************************" << std::endl;

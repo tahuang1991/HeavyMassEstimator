@@ -93,6 +93,8 @@ class heavyMassEstimator{
    private:
       void metCorrection();
       bool bjetsCorrection();
+      void getMETCovCholeskyDecomposition();
+      TVector2 metSmearing_Cov(int seed=0);
 
    private:
       void initTree(TTree* hmetree);
@@ -163,6 +165,11 @@ class heavyMassEstimator{
       float b2rescalefactor_;
       float rescalec1_;
       float rescalec2_;
+      int nbjetCorr_;
+      bool met_covcorrection_;
+      float met_covxx_;
+      float met_covyy_;
+      float met_covxy_;
       bool heavyMassEstimatordebug_;   
 
     private:
@@ -204,6 +211,20 @@ class heavyMassEstimator{
       void setb2jetkinematic(float px, float py, float pz, float E) {hme_b2jet_lorentz_.SetPxPyPzE(px, py,pz, E);}
       void settotjetskinematic(float px, float py, float pz, float E) {hme_totjets_lorentz_.SetPxPyPzE(px, py,pz, E);}
       void setMET(float px,float py) {hmemet_vec2_.Set(px, py); }
+      void setMETCovMatrix(float covxx, float covyy, float covxy, bool covcorrection) { 
+        //use MET covariance Matrix correction:  covxx*covyy - covxy^2 >0
+        met_covMatrix_[0][0] = covxx;
+        met_covMatrix_[0][1] = covxy;
+        met_covMatrix_[1][0] = covxy;
+        met_covMatrix_[1][1] = covyy;
+        met_covcorrection_ = covcorrection;
+        if (covxx*covyy < covxy*covxy){
+          std::cerr << "Error!! MET covariance matrix is not positive!! "<< std::endl;
+          met_covcorrection_ = false;
+        }
+        if (met_covcorrection_)
+          getMETCovCholeskyDecomposition();
+      }
 
 
     private:
@@ -328,6 +349,9 @@ class heavyMassEstimator{
       float met_phi_;
       float met_px_;
       float met_py_;
+      float met_covMatrix_ [2][2];
+      float met_choleskyMatrix_[2][2];
+
 
       float eta_nuoffshellW_true_;
       float phi_nuoffshellW_true_;
