@@ -38,10 +38,10 @@ int main(int argc, char *argv[])
 
 // agrv[0]: inputfile
 // argv[1]: outputfile
-  std::string inputfile;
+  std::string inputfile = "../data/Radion_M700_1kevents.root";
   std::string outputfile = "out_runHME_ntuple.root";
   if (argc < 2){
-    std::cerr <<"Number of arguments is "<< argc <<"! at least one more argument is required: inputfile "<< std::endl;
+    std::cerr <<"Number of arguments is "<< argc <<"! Would use default inputfile "<< inputfile << std::endl;
   }else if (argc == 2){
     inputfile = std::string(argv[1]);
   }else if (argc == 3){
@@ -51,7 +51,8 @@ int main(int argc, char *argv[])
 
   std::ifstream infile(inputfile);
   if (not infile.good()) {
-    std::cerr <<"infile is not existing: "<< inputfile << std::endl;
+    std::cerr <<"input file does not exist: "<< inputfile << std::endl;
+    exit(1);
   }
 
   //std::string treename = "Friends";
@@ -62,6 +63,10 @@ int main(int argc, char *argv[])
   int totalEv = chain.GetEntries();
   std::cout <<"inputfile "<< inputfile <<" treename:" << treename <<" Entries "<< totalEv << std::endl;
   std::cout <<"outputfile "<< outputfile << std::endl;
+  if (totalEv <= 0){
+    std::cerr <<"No events in found in TTree in root file "<< inputfile << std::endl;
+    exit(1); 
+  }
 
 
   TFile* out = new TFile(outputfile.c_str(), "recreate");
