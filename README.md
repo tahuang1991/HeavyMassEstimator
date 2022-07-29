@@ -1,12 +1,12 @@
 # Heavy mass estimator (HME)
-designed for estimating the mass of heavy resonance in X->HH->bbWW->bblvlv with two neutrinos in final states.  Both C++ and python version code are provided in this pacakge 
+Designed for estimating the mass of heavy resonance in X->HH->bbWW->bblvlv with two neutrinos in final states.  Both C++ and python version code are provided in this pacakge 
 
-The HME version for X->HH->ZZbb->llvvbb is only implmenetated in python under python/HeavyMassEstimatorHHZZBB.py 
-# Check out code
+The HME version for X->HH->ZZbb->llvvbb is only implemented in python in python/HeavyMassEstimatorHHZZBB.py 
+# Check out package
 git clone https://github.com/tahuang1991/HeavyMassEstimator
 
 # C++ version
-ROOT must be installed before as heavy mass estimator package used ROOT package 
+ROOT must be installed ahead as heavy mass estimator package depends on ROOT package 
 
 ## How to use heavy mass estimator c++ version package
 
@@ -44,23 +44,38 @@ in this constructor:
  
   - bjetrescaleAlgo and metcorrection are used to define how to correct bjets and met. bjetrescaleAlgo=2 and metcorrection = 5 are recommended from general studies.
 
+In addition, it is also possible to set the MET covariance correction for each event and enable MET covriance matrix smearing
+  ```
+  hme.setMETCovMatrix(met_covxx, met_covyy, met_covxy, True)
+  ```
 
-## How to compile and run C++ version
+
+
+
+## How to compile and run C++ version heavy mass estimator
 prerequisites to compile the package:
   -ROOT
 
-to compile the code:
+To compile the code:
 ```
 cd HeavyMassEstimator
 make
 ```
 
-to run heavy mass estimator with testHME:
+To run heavy mass estimator with testHME:
 ```
-cd bin
+cd exec/
 ./testHME
 ```
-The above excutable command is to run heavyMassEstimator with 10 events hard coded in testHME.cc
+The above executable command is to run heavyMassEstimator with 10 events hard coded in testHME.cc.  The event with ievent=1 also enabled MET covariance matrix smearing in this example. 
+
+To run heavy mass estimator with the provided Radion MC sample with mass = 700 GeV as input file
+```
+cd exec/
+./runHME_ntuple ../data/Radion_M700_1kevents.root
+```
+The above command would read in the events from ROOT TTree "Events" in data/Radion_M700_1kevents.root and compute the HME for each event. The events with HME are stored in one output file, which by default is named "out_runHME_ntuple.root"
+
 
 
 
@@ -94,7 +109,7 @@ Second step is to customize the HME with kinemamtic inputs and other controling 
   ```
   hme.setMETResolution(metRes)
   ```
-  - Set the MET covariance correction and enable MET covriance smearing
+  - Set the MET covariance correction and enable MET covriance matrix smearing
   ```
   hme.setMETCovMatrix(met_covxx, met_covyy, met_covxy, True)
   ```
@@ -104,7 +119,7 @@ Third step is to run HME
 hme.runHME()
 ```
 
-And to get the most probable mass from HME
+And the last step is to get the most probable mass from HME
 ```
 hme.hme_h2Mass.GetXaxis().GetBinCenter(hme.hme_h2Mass.GetMaximumBin())
 ```
@@ -117,7 +132,7 @@ bjetrescaleAlgo and metcorrection in python version HME, by default, are using t
 
 The profiled PDFs are hard coded in python/HardcodeREFPDF.py which upgraded to include boosted case in python/HardcodeREFPDF_boosted.py
 
-## Examples to python version HME class
+## Examples to use python version HME class
 
   - test/testHME.py runs the HME class with  one hard code event 
   - test/runHME_HHbbWW_general.py and test/runHME_HHbbWW_boosted.py read in the events from ROOT TTree and then compute the HME for each event. The following is example code from 
@@ -144,7 +159,12 @@ test/runHME_HHbbWW_general.py
   hme.runHME()
   hme_mass_peak[0] = hme.hme_h2Mass.GetXaxis().GetBinCenter(hme.hme_h2Mass.GetMaximumBin())
   ```
-
+and here is the example about how to run runHME_HHbbWW_boosted.py with Radion_M700_1kevents.root as input
+```
+cd test/
+python runHME_HHbbWW_boosted.py -i ../data/Radion_M700_1kevents.root -o Radion_M700_HME.root -it 10000
+```
+The output file to store events with HME is Radion_M700_HME.root and also the iterations for one event is 100000.
 # References
 
 T. Huang, J. M. No, L. Pernié, M. Ramsey-Musolf, A. Safonov, M. Spannowsky, and P. Winslow                                               
