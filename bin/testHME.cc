@@ -150,16 +150,21 @@ int main(int argc, char *argv[])
     bool weightfromonshellnupt_func = false;
     bool weightfromonshellnupt_hist = true;
     bool weightfromonoffshellWmass_hist = true;
-    //string RefPDFfile = "../data/REFPDFPU40.root";//the root file contains histogram for weighting 
-    const char* cmssw_base = std::getenv("CMSSW_BASE");
-    if (!cmssw_base) {
-        std::cerr << "Error! Environmental variable CMSSW_BASE not set!\n"
-                  << "Please run cmsenv first.\n"
-                  << "When running without CMSSW, you still need this variable so that the\n"
-                  << "certain files can be found.\n";
-        exit(1);            
+    string RefPDFfile = "../data/REFPDFPU40.root";//the root file contains histogram for weighting 
+    std::ifstream infile(RefPDFfile);
+    if (not infile.good()) {
+        std::cerr <<"Path to root file with profiled distribution: ../data/REFPDFPU40.root NOT found!" << std::endl;
+    
+        const char* cmssw_base = std::getenv("CMSSW_BASE");
+        if (!cmssw_base) {
+            std::cerr << "Error! Environmental variable CMSSW_BASE not set!\n"
+                      << "Please run cmsenv first.\n"
+                      << "When running without CMSSW, you still need this variable so that the\n"
+                      << "data/REFPDFPU40.root can be found.\n";
+            exit(1);            
+        }
+        RefPDFfile = std::string(cmssw_base).append("/src/hhAnalysis/Heavymassestimator/data/REFPDFPU40.root");//the root file contains histogram for weighting 
     }
-    string RefPDFfile = std::string(cmssw_base).append("/src/hhAnalysis/Heavymassestimator/data/REFPDFPU40.root");//the root file contains histogram for weighting 
     
     int iterations = 100000;
     bool useMET = true;//use MET or totjets_p4 to estimate kinematic sum of two nuetrino
@@ -185,7 +190,7 @@ int main(int argc, char *argv[])
         evlist[ievent].b1jet_p4, evlist[ievent].b2jet_p4, 
         evlist[ievent].totjets_p4, evlist[ievent].met_p4, 
         ievent);
-      if (ievent == nevent-1 ){
+      if (ievent == 1 ){
         //use MET covariance matrix smearing 
         hme.setMETCovMatrix(2.0, 2.0, 1.0, true);
       }

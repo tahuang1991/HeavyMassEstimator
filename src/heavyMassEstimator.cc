@@ -172,6 +172,7 @@ heavyMassEstimator::set_inputs(const TLorentzVector& lep1_lorentz, const TLorent
   b2rescalefactor_ = 1;
   rescalec1_ = 1;
   rescalec2_ = 1;
+  met_covcorrection_ = false;
 
   nu_onshellW_lorentz_ = TLorentzVector();
   nu_offshellW_lorentz_ = TLorentzVector();
@@ -1373,13 +1374,11 @@ heavyMassEstimator::metCorrection(){
 void 
 heavyMassEstimator::getMETCovCholeskyDecomposition(){
   const int n = 2;
-  //int met_covMatrix_[n][n] = {{covxx, covxy}, {covxy, covyy}};
-  //int met_choleskyMatrix_[n][n];
   memset(met_choleskyMatrix_, 0, sizeof(met_choleskyMatrix_));
   // Decomposing a matrix into met_choleskyMatrix_ Triangular
   for (int i = 0; i < n; i++) {
     for (int j = 0; j <= i; j++) {
-      int sum = 0;
+      float sum = 0;
 
       if (j == i) // summation for diagonals
       {
@@ -1397,19 +1396,19 @@ heavyMassEstimator::getMETCovCholeskyDecomposition(){
     }
   }
   //display met_choleskyMatrix_ Triangular and its Transpose 
-  std::cout << std::setw(6) << " Lower Triangular" 
-      << std::setw(30) << "Transpose" << std::endl;
-  for (int i = 0; i < n; i++) {
-    // met_choleskyMatrix_ Triangular
-    for (int j = 0; j < n; j++)
-        std::cout << std::setw(6) << met_choleskyMatrix_[i][j] << "\t";
-    std::cout << "\t";
-      
-    // Transpose of met_choleskyMatrix_ Triangular
-    for (int j = 0; j < n; j++)
-        std::cout << std::setw(6) << met_choleskyMatrix_[j][i] << "\t";
-    std::cout << std::endl;
-  }
+  //std::cout << std::setw(4) << " Lower Triangular" 
+  //    << std::setw(30) << "Transpose" << std::endl;
+  //for (int i = 0; i < n; i++) {
+  //  // met_choleskyMatrix_ Triangular
+  //  for (int j = 0; j < n; j++)
+  //      std::cout << std::setw(4) << met_choleskyMatrix_[i][j] << "\t";
+  //  std::cout << "\t";
+  //    
+  //  // Transpose of met_choleskyMatrix_ Triangular
+  //  for (int j = 0; j < n; j++)
+  //      std::cout << std::setw(4) << met_choleskyMatrix_[j][i] << "\t";
+  //  std::cout << std::endl;
+  //}
 
 }
 
