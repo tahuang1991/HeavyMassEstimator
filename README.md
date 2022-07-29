@@ -1,8 +1,8 @@
 # Heavy mass estimator (HME)
-designed for estimating the mass of heavy resonance in X->HH->bbWW->bblvlv with two neutrinos in final states.  Both C++ and python version code are provided in this pacakge 
+Designed for estimating the mass of heavy resonance in X->HH->bbWW->bblvlv with two neutrinos in final states.  Both C++ and python version code are provided in this pacakge 
 
-The HME version for X->HH->ZZbb->llvvbb is only implemented in python under python/HeavyMassEstimatorHHZZBB.py 
-# Check out code
+The HME version for X->HH->ZZbb->llvvbb is only implemented in python in python/HeavyMassEstimatorHHZZBB.py 
+# Check out package
 git clone https://github.com/tahuang1991/HeavyMassEstimator
 
 # C++ version
@@ -52,7 +52,7 @@ In addition, it is also possible to set the MET covariance correction for each e
 
 
 
-## How to compile and run C++ version
+## How to compile and run C++ version heavy mass estimator
 prerequisites to compile the package:
   -ROOT
 
@@ -132,7 +132,7 @@ bjetrescaleAlgo and metcorrection in python version HME, by default, are using t
 
 The profiled PDFs are hard coded in python/HardcodeREFPDF.py which upgraded to include boosted case in python/HardcodeREFPDF_boosted.py
 
-## Examples to python version HME class
+## Examples to use python version HME class
 
   - test/testHME.py runs the HME class with  one hard code event 
   - test/runHME_HHbbWW_general.py and test/runHME_HHbbWW_boosted.py read in the events from ROOT TTree and then compute the HME for each event. The following is example code from 
@@ -159,7 +159,12 @@ test/runHME_HHbbWW_general.py
   hme.runHME()
   hme_mass_peak[0] = hme.hme_h2Mass.GetXaxis().GetBinCenter(hme.hme_h2Mass.GetMaximumBin())
   ```
-
+and here is the example about how to run runHME_HHbbWW_boosted.py with Radion_M700_1kevents.root as input
+```
+cd test/
+python runHME_HHbbWW_boosted.py -i ../data/Radion_M700_1kevents.root -o Radion_M700_HME.root -it 10000
+```
+The output file to store events with HME is Radion_M700_HME.root and also the iterations for one is 100000.
 # References
 
 T. Huang, J. M. No, L. Pernié, M. Ramsey-Musolf, A. Safonov, M. Spannowsky, and P. Winslow                                               
