@@ -164,7 +164,7 @@ and here is the example about how to run runHME_HHbbWW_boosted.py with Radion_M7
 cd test/
 python runHME_HHbbWW_boosted.py -i ../data/Radion_M700_1kevents.root -o Radion_M700_HME.root -it 10000
 ```
-The output file to store events with HME is Radion_M700_HME.root and also the iterations for one is 100000.
+The output file to store events with HME is Radion_M700_HME.root and also the iterations for one event is 100000.
 # References
 
 T. Huang, J. M. No, L. Pernié, M. Ramsey-Musolf, A. Safonov, M. Spannowsky, and P. Winslow                                               
