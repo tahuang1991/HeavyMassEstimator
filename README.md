@@ -1,11 +1,17 @@
-# Heavy mass estimator (HME)
+- [Heavy mass estimator(HME) in general](#heavy-mass-estimator)
+- [Check HME package](#check-out-package)
+- [HME in C++](#cplusplus-version)
+- [HME in python](#python-version)
+- [References](#references)
+
+# Heavy mass estimator
 Designed for estimating the mass of heavy resonance in X->HH->bbWW->bblvlv with two neutrinos in final states.  Both C++ and python version code are provided in this pacakge 
 
 The HME version for X->HH->ZZbb->llvvbb is only implemented in python in python/HeavyMassEstimatorHHZZBB.py 
 # Check out package
 git clone https://github.com/tahuang1991/HeavyMassEstimator
 
-# C++ version
+# Cplusplus version
 ROOT must be installed ahead as heavy mass estimator package depends on ROOT package 
 
 ## How to use heavy mass estimator c++ version package
