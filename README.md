@@ -153,14 +153,14 @@ test/runHME_HHbbWW_general.py
 >jet2_p4 = ROOT.TLorentzVector()
 >dijet_p4 = ROOT.TLorentzVector()
 >met_vec2 = ROOT.TVector2()
-
+>
 >lep1_p4.SetXYZT(chain.l1_px, chain.l1_py, chain.l1_pz, chain.l1_E)
 >lep2_p4.SetXYZT(chain.l2_px, chain.l2_py, chain.l2_pz, chain.l2_E)
 >jet1_p4.SetXYZT(chain.j1_px, chain.j1_py, chain.j1_pz, chain.j1_E)
 >jet2_p4.SetXYZT(chain.j2_px, chain.j2_py, chain.j2_pz, chain.j2_E)
 >met_vec2.SetX(chain.met_px)
 >met_vec2.SetY(chain.met_py)
-
+>
 >hme = HeavyMassEstimator()
 >hme.setKinematic(lep1_p4, lep2_p4, jet1_p4, jet2_p4, met_vec2, 0)
 >hme.setIterations(iterations)
