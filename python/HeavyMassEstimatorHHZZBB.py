@@ -368,8 +368,7 @@ class HeavyMassEstimator(object):
         genRandom = ROOT.TRandom3(0)
         #PUSample: 25.2, PU0: 14.8
         met_sigma = 25.2
-        if not self.recobjetrescalec1pdf_flag:
-        met_sigma = 0.0	
+        if not self.recobjetrescalec1pdf_flag: met_sigma = 0.0	
         #genRandom.SetSeed()
         self.dilepton_mass[0] = self.dilepton_p4.M()
         if self.dilepton_mass[0] < 60.0:
