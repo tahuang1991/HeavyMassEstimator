@@ -84,7 +84,7 @@ cd exec/
 ```
 The above command would read in the events from ROOT TTree "Events" in data/Radion_M700_1kevents.root and compute the HME for each event. The events with HME are stored in one output file, which by default is named "out_runHME_ntuple.root"
 
-
+If the package is checked out under cmssw, before compiling the package, make sure the BuildFile.xml and bin/BuildFile.xml are updated with local path
 
 
 # Python version
