@@ -415,10 +415,12 @@ class HeavyMassEstimator(object):
         x2 = 2*rescalec1*(leadingbjet_p4*trailingbjet_p4)
         x3 = rescalec1*rescalec1*leadingbjet_p4.M2() - 125.0*125.0
         if x2<0:
-            print("error bjets lorentzvector dot product less than 0")
+            if self.debug:
+              print("Warning! bjets lorentzvector dot product less than 0")
             return False
         if ((x2*x2 - 4*x1*x3) < 0 or x1 == 0):
-            print("error ! there is no soluations for bjetsCorrection ")
+            if self.debug:
+              print("Warning! there is no soluations for bjetsCorrection ")
             return False
         rescalec2 = (-x2 + sqrt(x2*x2 - 4*x1*x3))/(2*x1)
         if rescalec2 < .0:
@@ -589,8 +591,9 @@ class HeavyMassEstimator(object):
                             break
                         ibjetcorr += 1
                     if not found_bjetscorr:
-                        print("no bject correction is found! ignore this iteration, it ", it, " total trials ", ibjetcorr)
-                        continue
+                      if self.debug:
+                        print("Warning! no bject correction is found! ignore this iteration, it ", it, " total trials ", ibjetcorr)
+                      continue
                     met_corr = self.met + ROOT.TVector2(met_dpx, met_dpy)+ self.metCorrection()
                 else:
                     met_corr = self.met
